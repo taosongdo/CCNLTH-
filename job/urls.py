@@ -11,6 +11,7 @@ router.register('cities', views.CityViewSet, basename='city')
 router.register('experiences', views.ExperienceViewSet, basename='experience')
 router.register('education-levels', views.EducationLevelViewSet, basename='education-level')
 router.register('skills', views.SkillViewSet, basename='skill')
+router.register('results', views.ResultViewSet, basename='result')
 
 urlpatterns = [
     path("o/token/", views.CustomTokenView.as_view(), name="custom-token"),

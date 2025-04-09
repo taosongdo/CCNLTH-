@@ -47,7 +47,6 @@ class JobType(models.IntegerChoices):
 class JobSearchCriteria(BaseModel):
     applicant = models.OneToOneField(User,primary_key=True,on_delete=models.CASCADE)
     job = models.CharField(max_length=30)
-    city = models.ForeignKey(City,on_delete=models.CASCADE)
     district = models.ForeignKey(District, on_delete=models.CASCADE)
     job_type = models.IntegerField(choices=JobType.choices, default=JobType.FULL_TIME)
     
@@ -57,7 +56,7 @@ class Experience(BaseModel):
     company_name = models.CharField(max_length=40)
     description = models.TextField(max_length=40)
 
-class EduactionLevel(BaseModel):
+class EducationLevel(BaseModel):
     applicant = models.ForeignKey(User,on_delete=models.CASCADE)
     school_name = models.CharField(max_length=30)
     certificate = models.CharField(max_length=30)
@@ -84,16 +83,15 @@ class ResultStatus(models.IntegerChoices):
 
 
 class JobPosting(BaseModel):
-    employer = models.ForeignKey(User, on_delete=models.CASCADE,related_name="employer_jobs")
+    employer = models.ForeignKey(User, on_delete=models.CASCADE)
     job = models.CharField(max_length=30)
     district = models.ForeignKey(District, on_delete=models.CASCADE,null=False,blank=False)
-    city = models.ForeignKey(City,on_delete=models.CASCADE,null=False,blank=False)
-    
-    descriptions = models.TextField(null=True,blank=True)
+    description = models.TextField(null=True,blank=True)
     requirements = models.TextField()
     salary = models.DecimalField(max_digits=10, decimal_places=2)
     job_type = models.IntegerField(choices=JobType.choices, default=JobType.FULL_TIME)
     quantity = models.IntegerField()
+    address = models.CharField(max_length=60)
     
 
 class Result(BaseModel):

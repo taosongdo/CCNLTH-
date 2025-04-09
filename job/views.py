@@ -3,7 +3,7 @@ from datetime import datetime,timedelta
 from django.http import HttpResponse
 from job.serializers import \
     ApplySerializer,  \
-    UserSerializer, \
+    UserDetailSerializer, \
     JobPostingSerializer, \
     ResultSerializer, \
     CitySerializer,\
@@ -12,11 +12,15 @@ from job.serializers import \
     PhoneSerializer,\
     CVDetailSerializer,\
     CVInformationSerializer,\
-    EduactionLevelSerializer,\
+    EducationLevelSerializer,\
+    EducationLevelDetailSerializer,\
     SkillSerializer,\
+    SkillDetailSerializer,\
+    JobSearchCriteriaDetailSerializer,\
     ExperienceSerializer,\
+    ExperienceDetailSerializer,\
     JobSearchCriteriaSerializer
-from job.models import CV, Apply, User, JobPosting, ResultStatus, UserRole,ApplyStatus,City,District,Skill,EduactionLevel,Experience,JobSearchCriteria
+from job.models import CV, Apply, User, JobPosting, ResultStatus, UserRole,ApplyStatus,City,District,Skill,EducationLevel,Experience,Result
 from job.paginator import Paginator
 from rest_framework.response import Response
 from rest_framework import viewsets, generics, status, permissions
@@ -26,22 +30,16 @@ from django.contrib.auth import authenticate
 from oauth2_provider.views import TokenView
 import json
 
-from job.perms import IsApplicant,IsEmployer,IsAdmin, IsOwner
+from job.perms import IsApplicant,IsEmployer,IsAdmin, IsEmployerOwner, IsApplicantOwner
 
-class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
+class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     queryset = User.objects.filter(is_active=True)
-    serializer_class = UserSerializer
-    
-    def get_permissions(self):
-        if self.action == 'list':
-            return [IsAdmin()]
-        elif self.action == 'create':
-            return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
+    serializer_class = UserDetailSerializer
+
     
     def create(self, request, *args, **kwargs):
         data = request.data
-        user_serializer = UserSerializer(data=data)
+        user_serializer = UserDetailSerializer(data=data)
         user_serializer.is_valid(raise_exception=True)
         user = user_serializer.save()
         
@@ -61,11 +59,11 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
             })
             phone_number_2_serializer.is_valid(raise_exception=True)
             phone_number_2 = phone_number_2_serializer.save()
-        return Response(UserSerializer(user).data,status=status.HTTP_201_CREATED)
+        return Response(UserDetailSerializer(user).data,status=status.HTTP_201_CREATED)
     
  
     
-    @action(methods=['get','patch'],detail=False,url_path='current-user')
+    @action(methods=['get','patch'],detail=False,url_path='current-user',permission_classes=[permissions.IsAuthenticated])
     def get_user(self,request):
         if request.method.__eq__('PATCH'):
             user = request.user
@@ -75,20 +73,20 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
                 elif key == 'password':
                     user.set_password(request.data[key])
                     user.save()
-            return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+            return Response(UserDetailSerializer(user).data, status=status.HTTP_201_CREATED)
         else:
-           return Response(UserSerializer(request.user).data, status=status.HTTP_201_CREATED)
+           return Response(UserDetailSerializer(request.user).data, status=status.HTTP_201_CREATED)
        
 
-    @action(methods=['get'],detail=False,url_path='cv-information')
+    @action(methods=['get'],detail=False,url_path='cv-information',permission_classes=[IsApplicant])
     def get_information(self, request):
         user = request.user
         return Response(CVInformationSerializer(user).data,status=status.HTTP_200_OK)
 
-    @action(methods=['get','post','patch'],detail=False,url_path='job-search-criteria')
+    @action(methods=['get','post','patch'],detail=False,url_path='job-search-criteria',permission_classes=[IsApplicant])
     def get_job_search_criteria(self,request):
         user = request.user
-        if request.action.__eq__("POST"):
+        if request.method.__eq__("POST"):
             job_search_criteria_serializer = JobSearchCriteriaSerializer(data={
                 'applicant':user.id,
                 'job': request.data.get("job"),
@@ -99,103 +97,153 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
             job_search_criteria_serializer.is_valid(raise_exception=True)
             job_search_criteria = job_search_criteria_serializer.save()
             return Response(JobSearchCriteriaSerializer(job_search_criteria).data,status=status.HTTP_201_CREATED)
-        elif request.action.__eq__("GET"):
+        elif request.method.__eq__("GET"):
             if hasattr(user,'jobsearchcriteria'):
-                job_search_criteria = user.jobsearchcriteria
-                return Response(JobSearchCriteriaSerializer(job_search_criteria).data,status=status.HTTP_200_OK)
+                job_search_criteria = user.jobsearchcriteria  
+                return Response(JobSearchCriteriaDetailSerializer(job_search_criteria).data,status=status.HTTP_200_OK)
+            return Response({'message':"chưa có thông tin"}, status=status.HTTP_200_OK)
+        else:
+            if hasattr(user,'jobsearchcriteria'):
+                job_search_criteria = user.jobsearchcriteria  
+                job_search_criteria.district = District.objects.get(id=request.data.get('district'))
+                job_search_criteria.job_type = request.data.get('job_type')
+                job_search_criteria.job = request.data.get('job')
+                job_search_criteria.save()
+                return Response(JobSearchCriteriaDetailSerializer(job_search_criteria).data,status=status.HTTP_200_OK)
             return Response({'message':"chưa có thông tin"}, status=status.HTTP_200_OK)
             
+    @action(methods=['get'],detail=False,url_path='education-levels',permission_classes=[IsApplicant])
+    def get_education_level(self, request):
+        user = request.user
+        return Response(EducationLevelSerializer(user.educationlevel_set,many=True).data, status=status.HTTP_200_OK)
+    
+            
+    
+    @action(methods=['get'],detail=False,url_path='skills',permission_classes=[IsApplicant])
+    def get_skills(self, request):
+        user = request.user
+        return Response(SkillSerializer(user.skill_set,many=True).data, status=status.HTTP_200_OK)
+        
+    @action(methods=['get'],detail=False,url_path='experiences',permission_classes=[IsApplicant])
+    def get_experiences(self, request):
+        user = request.user
+        return Response(ExperienceSerializer(user.experience_set, many=True).data, status=status.HTTP_200_OK)
+    
+    @action(methods=['get'],detail=False,url_path='job-postings')
+    def get_job_postings(self, request):
+        queryset = JobPosting.objects.filter(active=True)
+        query = queryset.exclude(result=None).filter(result__status=ResultStatus.PASSED)
+        user = request.user
+
+        if request.user.is_authenticated and request.user.role == UserRole.EMPLOYER:
+            owner = request.query_params.get("owner")
+            if owner:
+                query = queryset.filter(employer=user.id)
+            
+        
+        if request.user.is_authenticated and request.user.role == UserRole.ADMIN:
+            query = queryset
+
+        salary_max = request.query_params.get("salary_max")
+        if salary_max:
+            query = query.filter(salary__lt=float(salary_max))
+            
+        salary_min = request.query_params.get("salary_min")
+        if salary_min:
+            query = query.filter(salary__gt=float(salary_min))
+        
+        job_type = request.query_params.get("job_type")
+        if job_type:
+            query = query.filter(job_type=job_type)
+        
+        keyword = request.query_params.get("keyword")
+        if keyword:
+            query = query.filter(Q(job__icontains=keyword)|Q(description__icontains=keyword)|Q(requirements__icontains=keyword))
+            
+        paginator = Paginator()
+        page = paginator.paginate_queryset(query, request)
+        
+        return paginator.get_paginated_response(JobPostingSerializer(page,many=True).data)
+    
         
 
-class EducationLevelViewSet(viewsets.ViewSet,generics.CreateAPIView,generics.ListAPIView,generics.UpdateAPIView):
-    queryset = EduactionLevel.objects.filter(active=True)
-    serializer_class = EduactionLevelSerializer
-    permission_classes = [IsOwner, IsApplicant]
-    
+class EducationLevelViewSet(viewsets.ViewSet,generics.CreateAPIView,generics.RetrieveAPIView,generics.UpdateAPIView,generics.DestroyAPIView):
+    queryset = EducationLevel.objects.filter(active=True)
+    serializer_class = EducationLevelDetailSerializer
+    permission_classes = [IsApplicantOwner, IsApplicant]
     def create(self, request, *args, **kwargs):
         user = request.user
-        education_level_serializer = EduactionLevelSerializer(data={
-            "applicant": user.id, 
-            "school_name": request.data.get("school_name"),
-            "certificate": request.data.get("certificate"),
-            "mature": request.data.get("mature"),
-            "description": request.data.get("description")
-        })
-        education_level_serializer.is_valid(raise_exception=True)
-        education_level = education_level_serializer.save()
-        return Response(EduactionLevelSerializer(education_level).data, status=status.HTTP_201_CREATED)
+        education_level_count = EducationLevel.objects.filter(applicant= user.id).count()
+        if education_level_count < 5:
+            education_level_serializer = EducationLevelSerializer(data={
+                'applicant': user.id,
+                'school_name': request.data.get('school_name'),
+                'certificate': request.data.get('certificate'),
+                'mature': request.data.get('mature'),
+                'description': request.data.get('description')
+            })
+            education_level_serializer.is_valid(raise_exception=True)
+            education_level = education_level_serializer.save()
+            return Response(EducationLevelDetailSerializer(education_level).data, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'message':"đã đạt tới hạn mức (5)"},status=status.HTTP_400_BAD_REQUEST)
     
-    def get_queryset(self):
-        return super().get_queryset()
-    
-    def get_queryset(self):
-        user = self.request.user
-        education_level_list = self.queryset.filter(applicant = user.id)
-        return education_level_list
-    
-    
-class SkillViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
+class SkillViewSet(viewsets.ViewSet,generics.CreateAPIView,generics.RetrieveAPIView,generics.UpdateAPIView,generics.DestroyAPIView):
     queryset = Skill.objects.filter(active=True)
-    serializer_class = SkillSerializer
-    permission_classes = [IsOwner, IsApplicant]
-    
+    serializer_class = SkillDetailSerializer
+    permission_classes = [IsApplicantOwner, IsApplicant]
     def create(self, request, *args, **kwargs):
         user = request.user
-        skill_serializer = SkillSerializer(data={
-            "applicant": user.id,
-            "value": user
-        })
-        skill_serializer.is_valid(raise_exception=True)
-        skill = skill_serializer.save()
-        return Response(SkillSerializer(skill).data, status=status.HTTP_201_CREATED)
+        skill_count = Skill.objects.filter(applicant=user.id).count()
+        
+        if skill_count < 5:
+            skill_serializer = SkillDetailSerializer(data={
+                'applicant': user.id,
+                'value': request.data.get('value')
+            })
+            skill_serializer.is_valid(raise_exception=True)
+            skill = skill_serializer.save()
+            return Response(SkillDetailSerializer(skill).data, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'message':'đã đạt tới số lượng tối đa (5)'}, status=status.HTTP_400_BAD_REQUEST)
     
-    def get_queryset(self):
-        user = self.request.user
-        skill_list = self.queryset.filter(applicant = user.id)
-        return skill_list
-    
-class ExperienceViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView, generics.UpdateAPIView,generics.DestroyAPIView):
+class ExperienceViewSet(viewsets.ViewSet,generics.CreateAPIView,generics.RetrieveAPIView,generics.UpdateAPIView,generics.DestroyAPIView):
     queryset = Experience.objects.filter(active=True)
-    serializer_class = ExperienceSerializer
-    permission_classes = [IsOwner,IsApplicant]
-    
+    serializer_class = ExperienceDetailSerializer
+    permission_classes = [IsApplicantOwner,IsApplicant]
     def create(self, request, *args, **kwargs):
         user = request.user
-        experience_count = self.queryset.filter(applicant=user.id).count()
-        if experience_count<5:
-            experience_serializer = ExperienceSerializer(data={
-                "applicant": user.id,
-                "job": request.data.get("job"),
-                "company_name": request.data.get("company_name"),
-                "description": request.data.get("description")
+        experience_count = Experience.objects.filter(applicant= user.id).count()
+        if experience_count < 5:
+            experience_serializer = ExperienceDetailSerializer(data={
+                'applicant': user.id,
+                'job': request.data.get('job'),
+                'company_name': request.data.get('company_name'),
+                'description': request.data.get('description')
             })
             experience_serializer.is_valid(raise_exception=True)
             experience = experience_serializer.save()
-            return Response(ExperienceSerializer(experience).data, status=status.HTTP_201_CREATED)
+            return Response(ExperienceDetailSerializer(experience).data, status=status.HTTP_201_CREATED)
         else:
-            return Response({'message':'đã quá số lượng kinh nghiệm cho phép'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    def get_queryset(self):
-        user = self.request.user
-        experience_list = self.queryset.filter(applicant = user.id)
-        return experience_list
+            return Response({"message":"đã đạt tới hạn mức"},status=status.HTTP_400_BAD_REQUEST)
     
     
-class JobPostingViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView,generics.UpdateAPIView):
+class JobPostingViewSet(viewsets.ViewSet, generics.CreateAPIView,generics.RetrieveAPIView,generics.UpdateAPIView):
     queryset = JobPosting.objects.filter(active=True)
-    serializer_class = JobPostingSerializer
+    serializer_class = JobPostingDetailSerializer
+
     def get_permissions(self):
-        if self.action == 'create':
-            return [IsEmployer()]
-        return [permissions.AllowAny()]
+        if self.action == 'retrieve':
+            return [permissions.IsAuthenticated()]
+        return [IsEmployer(),IsEmployerOwner()]
+ 
     
     def create(self, request, *args, **kwargs):
         try:
-            job_posting_serializer = JobPostingSerializer(data={
-                'id_employer':request.user.id,
-                'id_job': request.data.get('id_job'),
-                'id_district': request.data.get('id_district'),
-                'id_city': request.data.get('id_city'),
+            job_posting_serializer = JobPostingDetailSerializer(data={
+                'employer':request.user.id,
+                'job': request.data.get('job'),
+                'district': request.data.get('district'),
                 'descriptions': request.data.get('descriptions'),
                 'requirements': request.data.get('requirements'),
                 'salary':request.data.get('salary'),
@@ -204,101 +252,85 @@ class JobPostingViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateA
             })
             job_posting_serializer.is_valid(raise_exception=True)
             job_posting = job_posting_serializer.save()
-            return Response(JobPostingSerializer(job_posting).data,status=status.HTTP_201_CREATED)
+            return Response(JobPostingDetailSerializer(job_posting).data,status=status.HTTP_201_CREATED)
         except Exception as ex:
             return Response({"message":f"{str(ex)}"},status=status.HTTP_400_BAD_REQUEST)
         
-    def get_queryset(self):
-        query = self.queryset.exclude(result=None)
-        user = self.request.user
-
-        if self.request.user.is_authenticated and self.request.user.role == UserRole.EMPLOYER:
-            owner = self.request.query_params.get("owner")
-            if owner:
-                query = self.queryset.filter(id_employer=user.id)
-        
-        if self.request.user.is_authenticated and self.request.user.role == UserRole.ADMIN:
-            query = self.queryset
-
-        salary_max = self.request.query_params.get("salary_max")
-        if salary_max:
-            query = query.filter(salary__lt=float(salary_max))
-            
-        salary_min = self.request.query_params.get("salary_min")
-        if salary_min:
-            query = query.filter(salary__gt=float(salary_min))
-        
-        job_type = self.request.query_params.get("job_type")
-        if job_type:
-            query = query.filter(job_type=job_type)
-        
-        name = self.request.query_params.get("name")
-        if name:
-            query = query.filter(name__icontains=name)
-            
-        return query
-        
     def update(self, request, *args, **kwargs):
-        active = request.data.get("active")
-        if self.get_object().apply_set.filter(active=True).exists() and active == None:
-            return Response({'message':'không thể xóa vì đã có người apply'}, status=status.HTTP_400_BAD_REQUEST)
-        elif active != None:
-            self.get_object().apply_set.filter(active=True).update(apply_status=ApplyStatus.CANCEL)
+        job_posting =  self.get_object()
+        for key in request.data:
+            if key in ['active']:
+                active = request.data.get("active")
+                if job_posting.apply_set.filter(active=True).exists() and active == None:
+                    return Response({'message':'không thể xóa vì đã có người apply'}, status=status.HTTP_400_BAD_REQUEST)
+                elif active != None:
+                    self.get_object().apply_set.filter(active=True).update(apply_status=ApplyStatus.CANCEL)
+            elif key in ['job','district ','descriptions','requirements','salary','job_type','quantity']:
+                    setattr(job_posting, key, request.data[key])
         return super().update(request, *args, **kwargs)
         
     
-    @action(methods=['post'], detail=True, url_path='results')
-    def set_result(self, request, pk):
-        try:
-            result_serializer = ResultSerializer(data={
-                "message": request.data.get("message"),
-                "status": request.data.get("status"),
-                "id": pk
-            })
-            result_serializer.is_valid(raise_exception=True)
-            result = result_serializer.save()
-            return Response(ResultSerializer(result).data, status=status.HTTP_201_CREATED)
-        except Exception as ex:
-            return Response({"message":f"{str(ex)}"}, status=status.HTTP_400_BAD_REQUEST)
-    
-    @action(methods=['get','post'], detail=True,url_path='applies')
-    def set_apply_post(self, request, pk):
-        try:
-            if request.user.role == UserRole.APPLICANT and request.method.__eq__('POST'):
-                job = self.get_object()
-                if not hasattr(job,'result') or job.result.status == ResultStatus.FAILED:
-                    return Response({"message": "công việc này hiện tại chưa hợp lệ"},status=status.HTTP_409_CONFLICT)
+    # @action(methods=['get','post'], detail=True,url_path='applies')
+    # def set_apply_post(self, request, pk):
+    #     try:
+    #         if request.user.role == UserRole.APPLICANT and request.method.__eq__('POST'):
+    #             job = self.get_object()
+    #             if not hasattr(job,'result') or job.result.status == ResultStatus.FAILED:
+    #                 return Response({"message": "công việc này hiện tại chưa hợp lệ"},status=status.HTTP_409_CONFLICT)
                 
-                apply_check = job.result.filter(
-                    id_cv = request.data.get('id_cv'),
-                    id_job = pk,
-                    apply_status__in=[ApplyStatus.SENT,ApplyStatus.INTERVIEWING]).exists()
+    #             apply_check = job.result.filter(
+    #                 id_cv = request.data.get('id_cv'),
+    #                 id_job = pk,
+    #                 apply_status__in=[ApplyStatus.SENT,ApplyStatus.INTERVIEWING]).exists()
                 
-                if apply_check:
-                    return Response({"message": "đã ứng tuyển và trong quá trình xét tuyển "},status=status.HTTP_409_CONFLICT)
+    #             if apply_check:
+    #                 return Response({"message": "đã ứng tuyển và trong quá trình xét tuyển "},status=status.HTTP_409_CONFLICT)
 
-                apply = Apply.objects.create(
-                    id_cv = CV.objects.get(id=request.data.get('id_cv')),
-                    id_job = self.get_object(),
-                    expired_date = datetime.now() + timedelta(days=33) 
-                )
-                return Response(ApplySerializer(apply).data,status=status.HTTP_201_CREATED)
-            else:
-                applies = self.get_object().apply_set
-                return Response(ApplySerializer(applies, many=True).data, status=status.HTTP_200_OK)
-        except Exception as ex:
-            return Response({"message":f"{ex}"},status=status.HTTP_400_BAD_REQUEST)
+    #             apply = Apply.objects.create(
+    #                 id_cv = CV.objects.get(id=request.data.get('id_cv')),
+    #                 id_job = self.get_object(),
+    #                 expired_date = datetime.now() + timedelta(days=33) 
+    #             )
+    #             return Response(ApplySerializer(apply).data,status=status.HTTP_201_CREATED)
+    #         else:
+    #             applies = self.get_object().apply_set
+    #             return Response(ApplySerializer(applies, many=True).data, status=status.HTTP_200_OK)
+    #     except Exception as ex:
+    #         return Response({"message":f"{ex}"},status=status.HTTP_400_BAD_REQUEST)
     
-    @action(methods=['get'],detail=True,url_path='current-job-posting')
-    def set_detail(self,request,pk):
-        jobPosting = self.get_object()
-        return Response(JobPostingDetailSerializer(jobPosting).data, status=status.HTTP_200_OK)
+
+class ResultViewSet(viewsets.ViewSet,generics.CreateAPIView):
+    queryset = Result.objects.filter(active=True)
+    serializer_class = ResultSerializer()
+    permission_classes = [IsAdmin]
+
+    def create(self, request, *args, **kwargs):
+        result_serializer = ResultSerializer(data={
+            "message": request.data.get("message"),
+            "status": request.data.get("status"),
+            "admin": request.user.id,
+            "id": request.data.get("job_posting"),
+        })
+        result_serializer.is_valid(raise_exception=True)
+        result = result_serializer.save()
+        return Response(ResultSerializer(result).data, status=status.HTTP_201_CREATED)
     
+    
+# class ApplyViewSet(viewsets.ViewSet,generics.CreateAPIView):
+#     queryset = Apply.objects.filter(active=True)
+#     serializer_class = ApplySerializer()
+#     permission_classes = [IsApplicant]
+#     def create(self, request, *args, **kwargs):
+#         apply_serializer = ApplySerializer(data={
+#             "cv": request.data.get('cv')
+#             "job": request.data.get()
+#         })
+
 class CVViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView, generics.UpdateAPIView, generics.DestroyAPIView,generics.RetrieveAPIView):
     queryset = CV.objects.filter(active=True)
     serializer_class = CVDetailSerializer
     pagination_class = Paginator
-    permission_classes = [IsApplicant, IsOwner]
+    permission_classes = [IsApplicant, IsApplicantOwner]
     
     def get_queryset(self):
         query = self.queryset
@@ -354,10 +386,19 @@ class CityViewSet(viewsets.ViewSet,generics.ListAPIView):
     serializer_class=CitySerializer
     pagination_class=Paginator
     
+    def get_queryset(self):
+        cities = self.queryset
+        keyword = self.request.query_params.get("keyword")
+        if keyword:
+            cities = self.queryset.filter(name__icontains=keyword)
+        return cities
+    
     @action(methods=['get'], detail=True, url_path='districts')
     def get_district(self,request,pk):
         districts = District.objects.filter(city=pk)
-        
+        keyword = request.query_params.get('keyword')
+        if keyword:
+            districts = districts.filter(name__icontains=keyword)
         page = self.paginate_queryset(districts)
         if page is not None:
             return self.get_paginated_response(DistrictSerializer(page, many=True).data)
