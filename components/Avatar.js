@@ -1,23 +1,10 @@
-import { View, Image, StyleSheet } from 'react-native'
+import Styles from "../Styles"
+import { View, Image } from "react-native"
 const Avatar = (props) => {
     return (
-        <View style={styles.avatarView}>
-            <Image style={styles.avatarImage} source={{ uri: props.image ? props.image : "https://res.cloudinary.com/dx6brcofe/image/upload/v1736245841/woxspsofipalpoz8r4aj.jpg" }} />
+        <View style={[Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.w100per, Styles.p10]}>
+            <Image style={[Styles.borderRadius100, Styles.w150, Styles.h150]} source={{ uri: props.avatar ? props.avatar : "https://res.cloudinary.com/dx6brcofe/image/upload/v1736245841/woxspsofipalpoz8r4aj.jpg" }} />
         </View>
     )
 }
 export default Avatar
-
-const styles = StyleSheet.create({
-    avatarView: {
-        padding: 10,
-        alignItems: "center",
-        justifyContent: "center",
-        width: '100%',
-    },
-    avatarImage: {
-        width: 100,
-        height: 100,
-        borderRadius: 100
-    }
-})

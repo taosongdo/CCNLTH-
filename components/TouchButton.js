@@ -1,9 +1,18 @@
-import { Pressable, Text, StyleSheet } from "react-native"
+import { Pressable, Text, } from "react-native"
+import Styles from "../Styles"
 
 const TouchButton = (props) => {
     return (
-        <Pressable style={[styles.buttonPress, { backgroundColor: props.backgroundColor }, props.height ? { height: props.height } : {}]} onPress={() => { props.pressHandler() }}>
-            <Text style={styles.textTitle}>
+        <Pressable style={[Styles.marginBottom10, Styles.borderRadius10, Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.w100per, Styles.h45, Styles.bgColorDBEAFE]}
+            onPress={() => {
+                if (props.params) {
+                    props.pressHandler(props.params)
+                }
+                else {
+                    props.pressHandler()
+                }
+            }}>
+            <Text style={[Styles.color334155, Styles.fontSize15, Styles.verticalAlignMiddle, Styles.textAlignCenter]}>
                 {props.title}
             </Text>
         </Pressable >
@@ -12,20 +21,3 @@ const TouchButton = (props) => {
 
 export default TouchButton
 
-const styles = StyleSheet.create({
-    buttonPress: {
-        marginBottom: 10,
-        borderRadius: 10,
-        height: 40,
-        width: '100%',
-        justifyContent: "center",
-        alignItems: "center"
-    },
-    textTitle: {
-        fontSize: 17,
-        color: "white",
-        verticalAlign: "middle",
-        textAlign: "center"
-    }
-
-})

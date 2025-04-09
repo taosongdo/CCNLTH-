@@ -65,7 +65,7 @@ const htmlContent = (cvInfomation) => {
             <div class="left-column">
                 <img src="${cvInfomation.avatar}" alt="Profile Picture">
                 <h2>${cvInfomation.last_name} ${cvInfomation.first_name}</h2>
-                <p>${cvInfomation.job_search_criteria.job_type} ${cvInfomation.job_search_criteria.job.name}</p>
+                <p>${cvInfomation.job_search_criteria.job_type_label} ${cvInfomation.job_search_criteria.job}</p>
                 
                 <h3>Thông tin liên hệ</h3>
                 <p>Email: ${cvInfomation.email}</p>
@@ -101,7 +101,7 @@ const htmlContent = (cvInfomation) => {
                         `
                             <p><strong>${experience.company_name}</strong></p>
                             <ul>
-                                <li>công việc: ${experience.job.name}</li>
+                                <li>công việc: ${experience.job}</li>
                                 <li>mô tả: ${experience.description}</li>
                             </ul>
                         `

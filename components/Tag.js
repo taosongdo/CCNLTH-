@@ -1,37 +1,39 @@
-import { View, Text, StyleSheet, Pressable } from "react-native"
-import { useState } from "react"
+import { View, Text, StyleSheet, Pressable, Image } from "react-native"
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5"
+import Styles from "../Styles"
 
 const Tag = (props) => {
-    const [item, setItem] = useState(props.item)
-    
-    const cutText = (text) => {
-        return text.length > 15 ? text.substring(0, 12) + "..." : text
+    const item = props.item
+    const params = props.params
+    const setBackgroundColor = () => {
+        return params ? (item.result ? (item.result.status == 1 ? { backgroundColor: 'green' } : { backgroundColor: "pink" }) : { backgroundColor: "yellow" }) : Styles.bgColorBFDBFE
     }
-   
+
     return (
-        <Pressable style={styles.TagView} onPress={() => { props.pressHandler() }}>
-            <View style={styles.TagViewName}>
+        <Pressable style={[styles.TagView, setBackgroundColor(), Styles.borderRadius20, Styles.h150]} onPress={() => { props.pressHandler(item.id) }}>
+            <View style={[styles.TagViewName, Styles.alignItemsCenter, Styles.justifyContentCenter]}>
                 <Text style={styles.TagName}>
-                    {item.name}
+                    {item.job}
                 </Text>
             </View>
-            <View style={styles.TagInfo}>
-                <View style={styles.TagViewItem}><FontAwesome5 name="tools" size={20} color="#222831" /><Text style={styles.TagItem}>{cutText(item.requirements)}</Text></View>
-                <View style={styles.TagViewItem}><FontAwesome5 name="dollar-sign" size={20} color="#222831" /><Text style={styles.TagItem}>{Intl.NumberFormat("en-US").format(item.salary)} VNĐ</Text></View>
-                <View style={styles.TagViewItem}><FontAwesome5 name="users" size={20} color="#222831" /><Text style={styles.TagItem}>{item.quantity - item.pass_count} người</Text></View>
-                <View style={styles.TagViewItem}><FontAwesome5 name="map-marker-alt" size={20} color="#222831" /><Text style={styles.TagItem}>{item.address} </Text></View>
+            <View style={[styles.TagInfo, Styles.flex1]}>
+
+                <View style={[styles.TagViewItem, Styles.alignItemsCenter, Styles.flexDirectionRow, Styles.justifyContentCenter]}><Image style={[styles.avatar, Styles.h45,Styles.borderRadius100]} source={{ uri: item.employer.avatar }} /><Text style={[styles.TagItem, Styles.color334155, Styles.fontSize15, Styles.verticalAlignMiddle, Styles.textAlignCenter]}>{item.employer.last_name} {item.employer.first_name}</Text></View>
+
+                <View style={[styles.TagViewItem, Styles.alignItemsCenter, Styles.flexDirectionRow, Styles.justifyContentCenter]}><FontAwesome5 name="dollar-sign" size={20} color="#222831" /><Text style={[styles.TagItem, Styles.color334155, Styles.fontSize15, Styles.verticalAlignMiddle, Styles.textAlignCenter]}>{Intl.NumberFormat("en-US").format(item.salary)} VNĐ</Text></View>
+                <View style={[styles.TagViewItem, Styles.alignItemsCenter, Styles.flexDirectionRow, Styles.justifyContentCenter]}><FontAwesome5 name="users" size={20} color="#222831" /><Text style={[styles.TagItem, Styles.color334155, Styles.fontSize15, Styles.verticalAlignMiddle, Styles.textAlignCenter]}>{item.quantity} người</Text></View>
+                <View style={[styles.TagViewItem, Styles.alignItemsCenter, Styles.flexDirectionRow, Styles.justifyContentCenter]}><FontAwesome5 name="map-marker-alt" size={20} color="#222831" /><Text style={[styles.TagItem, Styles.color334155, Styles.fontSize15, Styles.verticalAlignMiddle, Styles.textAlignCenter]}>{item.district.name} {item.district.city.name}</Text></View>
             </View>
         </Pressable>
     )
 }
 const styles = StyleSheet.create({
+    avatar: {
+        width: 45
+    },
     TagView: {
-        width: "100%",
-        height: 150,
-        backgroundColor: "#DDE2E6",
-        borderRadius: 20,
-        marginTop: 30
+        marginTop: 10,
+        width: 350
     },
     TagName: {
         fontSize: 30,
@@ -40,27 +42,16 @@ const styles = StyleSheet.create({
     },
     TagViewName: {
         height: "40%",
-        alignItems: "center",
-        justifyContent: "center",
-
     },
     TagInfo: {
-        flex: 1,
-        flexWrap: "wrap",
-
+        flexWrap: "wrap"
     },
     TagViewItem: {
-        flexDirection: "row",
-        alignItems: "center",
         width: "50%",
         height: "50%",
-        justifyContent: "center"
     },
     TagItem: {
         color: "#222831",
-        textAlign: "center",
-        verticalAlign: "middle",
-        fontSize: 15,
         marginLeft: 6
     }
 })

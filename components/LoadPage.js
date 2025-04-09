@@ -1,18 +1,11 @@
 import { View, ActivityIndicator, StyleSheet } from 'react-native'
-import { useEffect } from 'react';
+import Styles from '../Styles';
 const LoadPage = () => {
-   
+
     return (
-        <View style={styles.loadingPage}>
+        <View style={[Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.flex1]}>
             <ActivityIndicator size={80} color="blue" />
         </View>
     )
 }
 export default LoadPage
-const styles = StyleSheet.create({
-    loadingPage: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center"
-    }
-})

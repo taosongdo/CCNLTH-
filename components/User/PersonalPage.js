@@ -1,21 +1,21 @@
 
 import { useContext, useEffect, useState, useRef } from "react"
-import { View, Text, FlatList, RefreshControl } from "react-native"
-import { userContext } from "../App"
+import { View, Text, Image } from "react-native"
+import { userContext } from "../../App"
 import { StyleSheet } from "react-native"
-import TouchButton from "../components/TouchButton"
-import Avatar from "../components/Avatar"
-import InfoBar from "../components/InfoBar"
-import axios from "axios"
-import url from "../util/url"
-import LoadPage from "../components/LoadPage"
+import TouchButton from "../TouchButton"
+import InfoBar from "../InfoBar"
+import LoadPage from "../LoadPage"
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import InputBar from "../components/InputBar"
+import InputBar from "../InputBar"
 import * as DocumentPicker from "expo-document-picker";
-import ScrollList from "../components/ScrollList"
+import ScrollList from "../ScrollList"
+import Styles from "../../Styles"
+import Apis, { endpoints } from "../../config/Apis"
+import Avatar from "../Avatar"
 
 const PersonalPage = ({ navigation }) => {
-    const { token } = useContext(userContext)
+    const { token, role } = useContext(userContext)
     const [avatar, setAvatar] = useState(null)
     const [email, setEmail] = useState(null)
     const [firstName, setFirstName] = useState(null)
@@ -51,14 +51,13 @@ const PersonalPage = ({ navigation }) => {
                 type: result.assets[0].mimeType || "application/octet-stream",
             });
             setLoading(true)
-            const res = await axios.post(`${url.domainName}/cvs/`, formData, {
+            const res = await Apis.post(`${endpoints['cvs']}`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "multipart/form-data"
                 },
             })
             setLoading(false)
-            console.log(cvList)
             setCVList([...cvList, { id: res.data.id, name: res.data.name }])
         }
         catch (err) {
@@ -68,7 +67,7 @@ const PersonalPage = ({ navigation }) => {
     const loadData = async () => {
         if (token) {
             setLoading(true)
-            const res = await axios.get(`${url.domainName}/users/current-user/`, {
+            const res = await Apis.get(`${endpoints['current-user']}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
@@ -85,20 +84,19 @@ const PersonalPage = ({ navigation }) => {
             setCVList(res.data.cvs)
         }
     }
-
+    const JobViewHandler = () => {
+        navigation.navigate("trang danh sách bài đăng", { 'owner': 1 })
+    }
     useEffect(() => {
-        async function loadDataEffect() {
-            await loadData()
-        }
-        loadDataEffect()
+        loadData()
     }, [token])
 
     if (token === null) {
         return (
-            <View style={styles.personalPageView} >
-                <Text style={styles.textNot}>vui lòng đăng nhập để xem</Text>
+            <View style={[Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.flex1, Styles.bgColorF8FAFC]} >
+                <Text style={[styles.textNot, Styles.color334155]}>vui lòng đăng nhập để xem</Text>
                 <View style={styles.viewButton}>
-                    <TouchButton backgroundColor={"red"} title="đăng nhập" pressHandler={pressHandler} />
+                    <TouchButton  title="đăng nhập" pressHandler={pressHandler} />
                 </View>
             </View>
         )
@@ -107,8 +105,8 @@ const PersonalPage = ({ navigation }) => {
         return <LoadPage />
     }
     return (
-        <View style={styles.personalPageView} >
-            <Avatar image={avatar} />
+        <View style={[Styles.alignItemsCenter, Styles.flex1, Styles.bgColorF8FAFC]} >
+            <Avatar avatar={avatar}/>
             <View style={styles.viewContainer}>
                 <InfoBar title="họ và tên" content={`${lastName} ${firstName}`} />
                 <InfoBar title="tài khoản" content={`${username}`} />
@@ -116,40 +114,47 @@ const PersonalPage = ({ navigation }) => {
                 {
                     phoneList.map((phone, Index) => {
                         return (
-                            <InfoBar key={phone.id} title={`số điện thoại ${Index + 1}`} content={phone.phone} />
+                            <InfoBar key={phone.id} title={`số điện thoại ${Index + 1}`} content={phone.value} />
                         )
                     })
                 }
-                <ScrollList
-                    cvList={cvList}
-                    itemPressHandler={cvPressHandler}
-                    bottomSheetRef={bottomSheetRef}
-                    listName={"danh sách CV"}
-                    loadData={loadData}
-                    keyItems={{ 'cvId': 'id' }}
-                    title="cv"
-                    contentKeys={["name"]}
-                />
+                {role == 1 &&
+                    <ScrollList
+                        List={cvList}
+                        itemPressHandler={cvPressHandler}
+                        bottomSheetRef={bottomSheetRef}
+                        listName={"danh sách CV"}
+                        loadData={loadData}
+                        keyItems={{ 'cvId': 'id' }}
+                        title="cv"
+                        contentKeys={["name"]}
+                    />
+                }
+                {role == 2 &&
+                    <TouchButton title="xem bài đăng công việc" backgroundColor="blue" pressHandler={JobViewHandler} />
+                }
 
             </View>
-            <BottomSheet
-                ref={bottomSheetRef}
-                enablePanDownToClose={true}
-            >
-                <BottomSheetView style={styles.contentContainer} >
-                    <View style={styles.pageView}>
-                        <View style={styles.nameView}>
-                            <InputBar value={name} TextChangeHandler={setName} placeholder={"đặt tên (sẽ lấy tên của file nếu để trống)"} noMargin={true} />
+            {role == 1 &&
+                <BottomSheet
+                    ref={bottomSheetRef}
+                    enablePanDownToClose={true}
+                >
+                    <BottomSheetView >
+                        <View style={[Styles.h240, Styles.bgColorBFDBFE, Styles.alignItemsCenter]}>
+                            <View style={[Styles.w100per, Styles.p10]}>
+                                <InputBar value={name} TextChangeHandler={setName} placeholder={"đặt tên (sẽ lấy tên của file nếu để trống)"} noMargin={true} />
+                            </View>
+                            <View style={[styles.nameView, Styles.bgColorBFDBFE, Styles.p10]}>
+                                <TouchButton backgroundColor={"red"} title={`tải CV từ máy`} pressHandler={pickFile} />
+                            </View>
+                            <View style={[styles.nameView, Styles.bgColorBFDBFE, Styles.p10]}>
+                                <TouchButton backgroundColor={"blue"} title={`tạo cv online`} pressHandler={createCVPressHandler} />
+                            </View>
                         </View>
-                        <View style={styles.nameView}>
-                            <InfoBar backgroundColor={"pink"} content={`tải CV từ máy`} pressHandler={() => { pickFile() }} />
-                        </View>
-                        <View style={styles.nameView}>
-                            <InfoBar backgroundColor={"lightblue"} content={`tạo CV trực tiếp`} pressHandler={() => { createCVPressHandler() }} />
-                        </View>
-                    </View>
-                </BottomSheetView>
-            </BottomSheet>
+                    </BottomSheetView>
+                </BottomSheet>
+            }
         </View>
     )
 
@@ -157,12 +162,6 @@ const PersonalPage = ({ navigation }) => {
 export default PersonalPage
 
 const styles = StyleSheet.create({
-    personalPageView: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#F5F7FA"
-    },
     textNot: {
         fontSize: 20,
         marginBottom: 20
@@ -173,16 +172,7 @@ const styles = StyleSheet.create({
     viewContainer: {
         width: '80%'
     },
-
-
-
     nameView: {
-        padding: 10,
-        backgroundColor: "#DDE2E6",
-        height: 80
-    },
-    pageView: {
-        height: 240,
-        backgroundColor: "red"
-    },
+        width: 200
+    }
 })

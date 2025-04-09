@@ -1,8 +1,9 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import IndexPage from '../page/IndexPage';
-import PersonalPage from '../page/PersonalPage';
+import IndexPage from '../components/Home/IndexPage';
+import PersonalPage from '../components/User/PersonalPage';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import Styles from '../Styles';
 const TabNavigator = () => {
     const Tab = createBottomTabNavigator()
     return (
@@ -11,11 +12,7 @@ const TabNavigator = () => {
                 headerShown: false,
                 tabBarActiveTintColor: 'black',
                 tabBarInactiveTintColor: "gray",
-                tabBarStyle: {
-                    backgroundColor: "#DDE2E6",
-                    height: 60,
-                    paddingBottom: 10,
-                }
+                tabBarStyle: [Styles.bgColorBFDBFE, Styles.h60]
             }}
         >
             <Tab.Screen

@@ -1,16 +1,15 @@
 import React, { useState, useContext, useEffect } from "react"
-import { View, TouchableWithoutFeedback, Keyboard, StyleSheet, Alert, Text } from "react-native"
-import TouchButton from "../components/TouchButton"
-import InputBar from "../components/InputBar"
-import key from "../util/key"
-import axios from "axios"
-import url from "../util/url"
-import LoadPage from "../components/LoadPage"
-import { userContext } from "../App"
+import { View, TouchableWithoutFeedback, Keyboard, StyleSheet, Alert, Text, Image } from "react-native"
+import TouchButton from "../TouchButton"
+import InputBar from "../InputBar"
+import key from "../../config/key"
+import LoadPage from "../LoadPage"
+import { userContext } from "../../App"
 import DropDownPicker from "react-native-dropdown-picker"
-import Avatar from "../components/Avatar"
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from "@react-navigation/native";
+import Styles from "../../Styles"
+import Apis, { endpoints } from '../../config/Apis'
 
 const LoginPage = ({ navigation }) => {
     const navigationHook = useNavigation();
@@ -51,7 +50,7 @@ const LoginPage = ({ navigation }) => {
             formData.append("client_id", key.CLIENT_ID)
             formData.append("client_secret", key.CLIENT_SECRET)
             setLoading(true)
-            const res = await axios.post(`${url.domainName}/o/token/`, formData, {
+            const res = await Apis.post(`/o/token/`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
                 }
@@ -92,7 +91,7 @@ const LoginPage = ({ navigation }) => {
                     formData.append("phone_number_2", phoneNumber2)
                 }
                 setLoading(true)
-                const res = await axios.post(`${url.domainName}/users/`, formData, {
+                const res = await Apis.post(endpoints['users'], formData, {
                     headers: {
                         "Content-Type": "multipart/form-data"
                     }
@@ -158,29 +157,43 @@ const LoginPage = ({ navigation }) => {
     }
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.viewLoginPage}>
-                <View style={styles.formLogin}>
+            <View style={[Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.flex1, Styles.bgColorF8FAFC]}>
+                <View style={[styles.formLogin, Styles.borderRadius20, Styles.alignItemsCenter, Styles.bgColorBFDBFE, Styles.p10]}>
                     {!checkLogin &&
                         <>
-                            <Avatar image={avatar} />
+                            <View style={[Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.w100per, Styles.p10]}>
+                                <Image style={[Styles.w150, Styles.borderRadius100, Styles.h150]} source={{ uri: avatar ? avatar : "https://res.cloudinary.com/dx6brcofe/image/upload/v1736245841/woxspsofipalpoz8r4aj.jpg" }} />
+                            </View>
                             <TouchButton title="chọn ảnh" backgroundColor={"red"} pressHandler={pickImage} />
                         </>
                     }
-                    <InputBar value={username} TextChangeHandler={setUsername} placeholder={"tài khoản"} />
-                    <InputBar value={password} TextChangeHandler={setPassword} placeholder={"mật khẩu"} secureTextEntry={true} />
+                    <View style={[Styles.w100per, Styles.marginBottom10]}>
+                        <InputBar value={username} TextChangeHandler={setUsername} placeholder={"tài khoản"} />
+                    </View>
+                    <View style={[Styles.w100per, Styles.marginBottom10]}>
+                        <InputBar value={password} TextChangeHandler={setPassword} placeholder={"mật khẩu"} secureTextEntry={true} />
+                    </View>
 
                     {checkLogin ?
                         <>
-                            <TouchButton title="đăng nhập" backgroundColor={"blue"} pressHandler={login} />
-                            <View style={styles.line} />
-                            <Text style={styles.textNot}>chưa có tài khoản ?</Text>
-                            <TouchButton title="đăng ký" backgroundColor={"green"} pressHandler={checkLoginHandler} />
+                            <View style={Styles.w150}>
+                                <TouchButton title="đăng nhập" backgroundColor={"blue"} pressHandler={login} />
+                            </View>
+                            <View style={[styles.line, Styles.w100per]} />
+                            <Text style={[Styles.marginBottom10]}>chưa có tài khoản ?</Text>
+                            <View style={Styles.w150}>
+                                <TouchButton title="đăng ký" backgroundColor={"green"} pressHandler={checkLoginHandler} />
+                            </View>
                         </> :
                         <>
-                            {password !== passwordReenter && <Text style={[{ color: "red" }, styles.textNot]}>mật khẩu và xác nhận ko giống nhau</Text>}
-                            <InputBar value={passwordReenter} TextChangeHandler={setPasswordReenter} placeholder={"nhập lại mật khẩu"} secureTextEntry={true} />
-                            <InputBar value={gmail} TextChangeHandler={setGmail} placeholder={"gmail"} keyboardType={"email-address"} />
-                            <View style={styles.viewGroup}>
+                            {password !== passwordReenter && <Text style={[{ color: "red" }, Styles.marginBottom10]}>mật khẩu và xác nhận ko giống nhau</Text>}
+                            <View style={[Styles.w100per, Styles.marginBottom10]}>
+                                <InputBar value={passwordReenter} TextChangeHandler={setPasswordReenter} placeholder={"nhập lại mật khẩu"} secureTextEntry={true} />
+                            </View>
+                            <View style={[Styles.w100per, Styles.marginBottom10]}>
+                                <InputBar value={gmail} TextChangeHandler={setGmail} placeholder={"gmail"} keyboardType={"email-address"} />
+                            </View>
+                            <View style={[Styles.flexDirectionRow, Styles.justifyContentBetween, Styles.w100per]}>
                                 <View style={styles.view1on3}>
                                     <InputBar value={firstName} TextChangeHandler={setFirstName} placeholder={"tên"} />
                                 </View>
@@ -191,19 +204,19 @@ const LoginPage = ({ navigation }) => {
                                     <TouchButton title={gender ? "nam" : "nữ"} backgroundColor={gender ? "lightblue" : "pink"} pressHandler={() => { setGender(!gender) }} />
                                 </View>
                             </View>
-                            <Text style={styles.textNot}>
+                            <Text style={Styles.marginBottom10}>
                                 số điện thoại 2 là tùy chọn
                             </Text>
-                            <View style={styles.viewGroup}>
-                                <View style={styles.viewHalf}>
+                            <View style={[Styles.flexDirectionRow, Styles.w100per, Styles.justifyContentBetween, Styles.marginBottom10]}>
+                                <View style={Styles.w48per}>
                                     <InputBar value={phoneNumber1} TextChangeHandler={setPhoneNumber1} keyboardType="numeric" placeholder={"số điện thoại 1"} />
                                 </View>
-                                <View style={styles.viewHalf}>
+                                <View style={Styles.w48per}>
                                     <InputBar value={phoneNumber2} TextChangeHandler={setPhoneNumber2} keyboardType="numeric" placeholder={"số điện thoại 2"} />
                                 </View>
                             </View>
                             <DropDownPicker
-                                style={[styles.list, styles.districtList]}
+                                style={[styles.list, Styles.marginBottom10, Styles.borderRadius10, Styles.bgColorF8FAFC, styles.districtList]}
 
                                 open={openUserRole}
                                 setOpen={setOpenUserRole}
@@ -217,8 +230,8 @@ const LoginPage = ({ navigation }) => {
 
                             />
                             <TouchButton title="đăng ký" backgroundColor={"green"} pressHandler={register} />
-                            <View style={styles.line} />
-                            <Text style={styles.textNot}>đã có tài khoản ?</Text>
+                            <View style={[styles.line, Styles.w100per]} />
+                            <Text style={Styles.marginBottom10}>đã có tài khoản ?</Text>
                             <TouchButton title="đăng nhập" backgroundColor={"blue"} pressHandler={checkLoginHandler} />
                         </>
                     }
@@ -229,38 +242,14 @@ const LoginPage = ({ navigation }) => {
 export default LoginPage
 
 const styles = StyleSheet.create({
-    viewLoginPage: {
-        backgroundColor: "#F5F7FA",
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center"
-    },
-    textNot: {
-        marginBottom: 10
-    },
-    viewGroup: {
-        width: '100%',
-        flexDirection: "row",
-        justifyContent: "space-between",
-    },
-    viewHalf: {
-        width: '45%'
-    },
     formLogin: {
-        padding: 10,
-        borderRadius: 20,
-        backgroundColor: "#DDE2E6",
-        alignItems: "center",
         width: 350
     },
     view1on3: {
         width: '30%'
     },
     list: {
-        backgroundColor: '#F5F7FA',
-        borderRadius: 10,
         borderWidth: 0,
-        marginBottom: 10,
     },
     citiesList: {
         zIndex: 2
@@ -269,7 +258,6 @@ const styles = StyleSheet.create({
         zIndex: 1
     },
     line: {
-        width: '100%',
         height: 1,
         backgroundColor: 'gray',
         marginBottom: 5,

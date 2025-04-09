@@ -1,12 +1,12 @@
-import { StyleSheet, View, Keyboard, TouchableWithoutFeedback, Alert } from "react-native"
-import ScrollList from "../components/ScrollList"
+import { View, Keyboard, TouchableWithoutFeedback, Alert } from "react-native"
+import ScrollList from "../ScrollList"
 import { useContext, useEffect, useState } from "react"
-import axios from "axios"
-import url from "../util/url"
-import { userContext } from "../App"
-import InputBar from "../components/InputBar"
-import TouchButton from "../components/TouchButton"
-import LoadPage from "../components/LoadPage"
+import { userContext } from "../../App"
+import InputBar from "../InputBar"
+import TouchButton from "../TouchButton"
+import LoadPage from "../LoadPage"
+import Styles from "../../Styles"
+import Apis, { endpoints } from "../../config/Apis"
 
 
 const CVExperienceCreatorPage = () => {
@@ -20,7 +20,7 @@ const CVExperienceCreatorPage = () => {
     const loadData = async () => {
         try {
             setLoading(true)
-            const res = await axios.get(`${url.domainName}/experiences/`, {
+            const res = await Apis.get(`${endpoints['experiences']}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -39,11 +39,22 @@ const CVExperienceCreatorPage = () => {
         }
     }
 
-    const itemPressHandler = (params) => {
-        setCompanyName(params.company_name)
-        setDescription(params.description)
-        setExperienceId(params.id)
-        setJob(params.job)
+    const itemPressHandler = async (params) => {
+        try {
+            const res = await Apis.get(endpoints['experiences-detail'](params.id), {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            setCompanyName(res.data.company_name)
+            setDescription(res.data.description)
+            setExperienceId(res.data.id)
+            setJob(res.data.job)
+        }
+        catch (err) {
+            console.log(err)
+        }
+
     }
     const addNewItem = () => {
         setCompanyName("")
@@ -66,7 +77,7 @@ const CVExperienceCreatorPage = () => {
                     { text: "Hủy", style: "cancel" },
                     {
                         text: "OK", onPress: async () => {
-                            await axios.delete(`${url.domainName}/experiences/${id}/`, {
+                            await Apis.delete(`${endpoints['experiences-detail'](id)}`, {
                                 headers: {
                                     Authorization: `Bearer ${token}`
                                 }
@@ -86,7 +97,7 @@ const CVExperienceCreatorPage = () => {
         setLoading(true)
         if (experienceId) {
             try {
-                const res = await axios.patch(`${url.domainName}/experiences/${experienceId}/`, {
+                const res = await Apis.patch(endpoints['experiences-detail'](experienceId), {
                     job: job,
                     company_name: companyName,
                     description: description
@@ -103,7 +114,7 @@ const CVExperienceCreatorPage = () => {
         }
         else {
             try {
-                const res = await axios.post(`${url.domainName}/experiences/`, {
+                const res = await Apis.post(endpoints['experiences-create'], {
                     job: job,
                     company_name: companyName,
                     description: description
@@ -132,19 +143,16 @@ const CVExperienceCreatorPage = () => {
         )
     }
     return (
-        <View style={styles.viewPage}>
-            <View style={styles.listStyle}>
+        <View style={Styles.flex1}>
+            <View style={Styles.p10}>
                 <ScrollList
-                    cvList={experiencesList}
+                    List={experiencesList}
                     itemPressHandler={itemPressHandler}
                     listName={"kinh nghiệm"}
                     addNewItem={() => { addNewItem() }}
                     loadData={loadData}
                     keyItems={{
                         'id': 'id',
-                        'description': 'description',
-                        'company_name': 'company_name',
-                        'job': 'job',
                     }}
                     title="kn"
                     contentKeys={["company_name", "job"]}
@@ -154,18 +162,18 @@ const CVExperienceCreatorPage = () => {
             </View>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <View>
-                    <View style={styles.viewInput}>
+                    <View style={Styles.p10}>
                         <InputBar value={companyName} TextChangeHandler={setCompanyName} placeholder={"điền tên công ty"} noMargin={true} bgColor={"#DDE2E6"} />
                     </View>
-                    <View style={styles.viewDescription}>
+                    <View style={[Styles.h150, Styles.p10]}>
                         <InputBar value={description} TextChangeHandler={setDescription} placeholder={"điền mô tả"} noMargin={true} bgColor={"#DDE2E6"} multiline={true} />
                     </View>
-                    <View style={styles.viewInput}>
+                    <View style={Styles.p10}>
                         <InputBar value={job} TextChangeHandler={setJob} placeholder={"điền công việc"} noMargin={true} bgColor={"#DDE2E6"} />
                     </View>
                 </View>
             </TouchableWithoutFeedback>
-            <View style={styles.viewInput}>
+            <View style={[Styles.h60, Styles.p10]}>
                 <TouchButton backgroundColor={"blue"} title={experienceId ? "cập nhật hồ sơ kinh nghiệm" : "tạo hồ sơ kinh nghiệm"} pressHandler={createNewExperience} />
             </View>
         </View>
@@ -173,22 +181,3 @@ const CVExperienceCreatorPage = () => {
 }
 
 export default CVExperienceCreatorPage
-
-const styles = StyleSheet.create({
-    viewPage: {
-        flex: 1,
-        backgroundColor: ""
-    },
-    listStyle: {
-        padding: 10
-    },
-    viewInput: {
-        padding: 10,
-        height: 60,
-    },
-    viewDescription: {
-        padding: 10,
-        height: 150,
-    }
-
-})

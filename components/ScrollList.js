@@ -1,7 +1,7 @@
 import { View, Text, FlatList, StyleSheet, RefreshControl } from 'react-native'
 import TouchButton from './TouchButton';
 import { useState } from 'react';
-import InfoBar from './InfoBar';
+import Styles from '../Styles';
 const ScrollList = (props) => {
     const [refreshing, setRefreshing] = useState(false);
     const paramsParser = (item, keyItems) => {
@@ -13,11 +13,11 @@ const ScrollList = (props) => {
     }
     return (
         <>
-            <View style={styles.viewCVTitle}>
-                <Text style={styles.textCVTitle}>
+            <View style={[styles.viewCVTitle, Styles.flexDirectionRow, Styles.justifyContentCenter, Styles.bgColorBFDBFE, Styles.h60]}>
+                <Text style={[styles.textCVTitle, Styles.verticalAlignMiddle, Styles.textAlignCenter, Styles.flex1]}>
                     {props.listName}
                 </Text>
-                <View style={{ width: 60, margin: 7 }}>
+                <View style={[{ margin: 7 }, Styles.w60]}>
                     <TouchButton backgroundColor={"blue"} title="+" pressHandler={() => {
                         if (props.bottomSheetRef) {
                             props.bottomSheetRef.current?.expand()
@@ -29,16 +29,16 @@ const ScrollList = (props) => {
                 </View>
             </View>
             <FlatList
-                data={props.cvList}
-                style={[styles.viewCVList, props.height ? { height: props.height } : {}]}
-                contentContainerStyle={styles.containCVList}
+                data={props.List}
+                style={[styles.viewCVList, Styles.bgColorF8FAFC, Styles.h240]}
+                contentContainerStyle={Styles.p10}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <View style={styles.viewItem}>
-                        <View style={styles.viewInfo}>
-                            <InfoBar pressHandler={props.itemPressHandler} params={paramsParser(item, props.keyItems)} title={`${props.title} ${item.id}`} content={`${props.contentKeys.map((contentKey) => { return item[contentKey] }).join(" - ")} `} />
+                    <View style={Styles.flexDirectionRow}>
+                        <View style={Styles.flex1}>
+                            <TouchButton title={`${props.contentKeys.map((contentKey) => { return item[contentKey] }).join(" - ")}`} params={paramsParser(item, props.keyItems)} backgroundColor={"blue"} pressHandler={props.itemPressHandler} />
                         </View>
-                        <View style={styles.viewButton}>
+                        <View style={[styles.viewButton, Styles.w60, Styles.h60]}>
                             <TouchButton backgroundColor={"red"} title={"-"} height={'100%'} pressHandler={() => { props.deleteItemHandler(item.id) }} />
                         </View>
                     </View>
@@ -56,38 +56,18 @@ const styles = StyleSheet.create({
     viewCVTitle: {
         borderTopLeftRadius: 10,
         borderTopRightRadius: 10,
-        backgroundColor: "#DDE2E6",
-        height: 60,
-
-        justifyContent: "center",
-        flexDirection: "row"
     },
     viewCVList: {
-        height: 230,
         borderColor: "#DDE2E6",
         borderBottomLeftRadius: 10,
         borderBottomRightRadius: 10,
         borderWidth: 5,
     },
     textCVTitle: {
-        flex: 1,
         fontSize: 20,
-        textAlign: "center",
-        verticalAlign: "middle"
-    },
-    containCVList: {
-        padding: 10,
-    },
-    viewItem: {
-        flexDirection: "row",
-    },
-    viewInfo: {
-        flex: 1
     },
     viewButton: {
-        width: 80,
         marginLeft: 10,
-        height: 60
     }
 
 })

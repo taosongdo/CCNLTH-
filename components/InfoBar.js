@@ -1,28 +1,14 @@
-import { StyleSheet, Text, Pressable } from "react-native"
+import { Text, View } from "react-native"
+import Styles from "../Styles"
 const InfoBar = (props) => {
 
     return (
-        <Pressable style={[styles.viewInfo, props.backgroundColor ? { backgroundColor: props.backgroundColor } : {}]} onPress={() => { props.pressHandler?.(props.params) }}>
-            <Text style={[styles.textInfo, props.title ? {} : { textAlign: "center" }]}>
+        <View style={[Styles.marginBottom10, Styles.w100per, Styles.borderRadius10, Styles.bgColorDBEAFE, Styles.p10, props.backgroundColor]}>
+            <Text multiline={props.multiline} style={[Styles.fontSize15, props.title ? {} : Styles.textAlignCenter, props.multiline ? { verticalAlign: 'top', textAlign: 'left' } : {}]}>
                 {props.title}{props.title ? ":" : ""} {props.content}
             </Text>
-        </Pressable>
+        </View>
     )
 }
 
 export default InfoBar
-
-const styles = StyleSheet.create({
-    viewInfo: {
-        height: 60,
-        justifyContent: "center",
-        paddingLeft: 15,
-        backgroundColor: "#DDE2E6",
-        width: '100%',
-        borderRadius: 10,
-        marginBottom: 10
-    },
-    textInfo: {
-        fontSize: 20
-    }
-})

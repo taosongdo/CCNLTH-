@@ -1,12 +1,12 @@
-import { StyleSheet, View, TouchableWithoutFeedback, Keyboard } from "react-native"
-import ScrollList from "../components/ScrollList"
+import { StyleSheet, View, TouchableWithoutFeedback, Keyboard, Alert } from "react-native"
+import ScrollList from "../ScrollList"
 import { useContext, useEffect, useState } from "react"
-import axios from "axios"
-import url from "../util/url"
-import { userContext } from "../App"
-import InputBar from "../components/InputBar"
-import TouchButton from "../components/TouchButton"
-import LoadPage from "../components/LoadPage"
+import { userContext } from "../../App"
+import InputBar from "../InputBar"
+import TouchButton from "../TouchButton"
+import LoadPage from "../LoadPage"
+import Styles from "../../Styles"
+import Apis, { endpoints } from "../../config/Apis"
 
 
 const EducationLevelPage = () => {
@@ -28,7 +28,7 @@ const EducationLevelPage = () => {
     const loadData = async () => {
         setLoading(true)
         try {
-            const res = await axios.get(`${url.domainName}/education-levels/`, {
+            const res = await Apis.get(endpoints['education-levels'], {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -41,12 +41,22 @@ const EducationLevelPage = () => {
         }
         setLoading(false)
     }
-    const itemPressHandler = (params) => {
-        setSchoolName(params.school_name)
-        setMature(params.mature)
-        setDescription(params.description)
-        setEduactionId(params.id)
-        setCerificate(params.certificate)
+    const itemPressHandler = async (params) => {
+        try {
+            const res = await Apis.get(endpoints['education-levels-detail'](params.id),{
+                headers:{
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            setSchoolName(res.data.school_name)
+            setMature(res.data.mature)
+            setDescription(res.data.description)
+            setEduactionId(res.data.id)
+            setCerificate(res.data.certificate)
+        }
+        catch (err) {
+
+        }
     }
     const addNewItem = () => {
         setSchoolName("")
@@ -65,7 +75,7 @@ const EducationLevelPage = () => {
         setLoading(true)
         if (educationId) {
             try {
-                const res = await axios.patch(`${url.domainName}/education-levels/${educationId}/`, {
+                const res = await Apis.patch(endpoints['education-levels-detail'](educationId), {
                     mature: mature,
                     school_name: schoolName,
                     description: description
@@ -81,8 +91,10 @@ const EducationLevelPage = () => {
             }
         }
         else {
+
             try {
-                const res = await axios.post(`${url.domainName}/education-levels/`, {
+
+                const res = await Apis.post(endpoints['education-levels-create'], {
                     mature: mature,
                     school_name: schoolName,
                     description: description,
@@ -100,7 +112,7 @@ const EducationLevelPage = () => {
         }
         setLoading(false)
     }
-    const deleteItemHandler = () => {
+    const deleteItemHandler = (id) => {
         try {
             Alert.alert(
                 "thông báo",
@@ -109,12 +121,17 @@ const EducationLevelPage = () => {
                     { text: "Hủy", style: "cancel" },
                     {
                         text: "OK", onPress: async () => {
-                            await axios.delete(`${url.domainName}/experiences/${id}/`, {
-                                headers: {
-                                    Authorization: `Bearer ${token}`
-                                }
-                            })
-                            setExperiencesList(deleteItem(experiencesList, 'id', id))
+                            try {
+                                await Apis.delete(endpoints['education-levels-detail'](id), {
+                                    headers: {
+                                        Authorization: `Bearer ${token}`
+                                    }
+                                })
+                                setEduactionLevelList(deleteItem(eduactionLevelList, 'id', id))
+                            }
+                            catch (err) {
+                                console.log(err)
+                            }
                         }
                     }
                 ],
@@ -131,65 +148,44 @@ const EducationLevelPage = () => {
         )
     }
     return (
-        <View style={styles.viewPage}>
-            <View style={styles.viewList}>
+        <View style={[Styles.flex1, Styles.bgColorF8FAFC]}>
+            <View style={Styles.p10}>
                 <ScrollList
-                    cvList={eduactionLevelList}
+                    List={eduactionLevelList}
                     itemPressHandler={itemPressHandler}
                     listName={"danh sách học vấn"}
                     addNewItem={addNewItem}
                     loadData={loadData}
                     keyItems={{
                         'id': 'id',
-                        'description': 'description',
-                        'school_name': 'school_name',
-                        'mature': 'mature',
-                        'certificate': 'certificate'
                     }}
                     title="hv"
                     contentKeys={["school_name", "mature"]}
                     height={150}
-                    deleteItemHandler={() => { }}
+                    deleteItemHandler={deleteItemHandler}
                 />
             </View>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <View>
-                    <View style={styles.viewInput}>
+                    <View style={Styles.p10}>
                         <InputBar value={schoolName} TextChangeHandler={setSchoolName} placeholder={"điền tên trường học"} noMargin={true} bgColor={"#DDE2E6"} />
                     </View>
-                    <View style={styles.viewInput}>
+                    <View style={Styles.p10}>
                         <InputBar value={mature} TextChangeHandler={setMature} placeholder={"điền ngành học"} noMargin={true} bgColor={"#DDE2E6"} />
                     </View>
-                    <View style={styles.viewInput}>
+                    <View style={Styles.p10}>
                         <InputBar value={certificate} TextChangeHandler={setCerificate} placeholder={"điền chứng chỉ"} noMargin={true} bgColor={"#DDE2E6"} />
                     </View>
-                    <View style={styles.viewDescription}>
+                    <View style={[Styles.h150, Styles.p10]}>
                         <InputBar value={description} TextChangeHandler={setDescription} placeholder={"điền mô tả"} noMargin={true} bgColor={"#DDE2E6"} multiline={true} />
                     </View>
                 </View>
             </TouchableWithoutFeedback>
-            <View style={styles.viewInput}>
+            <View style={Styles.p10}>
                 <TouchButton backgroundColor={"blue"} title={educationId ? "cập nhật hồ sơ học vấn" : "tạo hồ sơ học vấn"} pressHandler={() => { createNewEducation() }} />
             </View>
         </View>
     )
 }
 export default EducationLevelPage
-
-const styles = StyleSheet.create({
-    viewPage: {
-        flex: 1,
-        backgroundColor: '#F5F7FA'
-    },
-    viewList: {
-        padding: 10
-    },
-    viewInput: {
-        padding: 10
-    },
-    viewDescription: {
-        padding: 10,
-        height: 150
-    }
-})
 
