@@ -95,7 +95,7 @@ class JobPosting(BaseModel):
     
 
 class Result(BaseModel):
-    id = models.OneToOneField(JobPosting, primary_key=True, on_delete=models.CASCADE)
+    job_posting = models.OneToOneField(JobPosting, primary_key=True, on_delete=models.CASCADE)
     admin = models.ForeignKey(User, on_delete=models.CASCADE,related_name="admin_jobs",null=True)
     message = models.CharField(max_length=20)
     status = models.IntegerField(choices=ResultStatus.choices, default=ResultStatus.PASSED)
@@ -107,16 +107,16 @@ class CV(BaseModel):
 
 class ApplyStatus(models.IntegerChoices):
     SENT = 1
-    INTERVIEWING = 2
-    PASSED = 3
-    FAILED = 4
-    CANCEL = 5
+    SEEN = 2
+    INTERVIEWING = 3
+    PASSED = 4
+    FAILED = 5
+    CANCEL = 6
     
 class Apply(BaseModel):
     cv = models.ForeignKey(CV, on_delete=models.CASCADE)
-    job = models.ForeignKey(JobPosting, on_delete=models.CASCADE)
+    job_posting = models.ForeignKey(JobPosting, on_delete=models.CASCADE)
     interviewing_date = models.DateTimeField(null=True)
-    expired_date = models.DateTimeField(null=True)
     apply_status = models.IntegerField(choices=ApplyStatus.choices, default=ApplyStatus.SENT)
     message = models.CharField(max_length=200)
     

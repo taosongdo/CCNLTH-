@@ -14,11 +14,11 @@ class IsEmployer(permissions.IsAuthenticated):
         return super().has_permission(request,view) and request.user.role == UserRole.EMPLOYER
     
 
-class IsApplicantOwner(permissions.IsAuthenticated):
+class IsApplicantOwner(IsApplicant):
     def has_object_permission(self, request, view, obj):
         return super().has_permission(request,view) and obj.applicant == request.user
 
-class IsEmployerOwner(permissions.IsAuthenticated):
+class IsEmployerOwner(IsEmployer):
     def has_object_permission(self, request, view, obj):
         return super().has_permission(request,view) and obj.employer == request.user
 

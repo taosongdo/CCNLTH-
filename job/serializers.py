@@ -1,4 +1,4 @@
-from job.models import CV, Result, User,JobPosting, Apply,ApplyStatus,City,District,Phone,Experience,EducationLevel,Skill,JobSearchCriteria,JobType,UserRole
+from job.models import CV, Result, User,JobPosting, Apply,ApplyStatus,City,District,Phone,Experience,EducationLevel,Skill,JobSearchCriteria,JobType,UserRole,ResultStatus
 from rest_framework import serializers
 from django.db.models import Count, Q
 
@@ -135,56 +135,81 @@ class CVInformationSerializer(serializers.ModelSerializer):
         fields=UserSerializer.Meta.fields +['email']
         
 class ResultSerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['status_label'] = ResultStatus(instance.status).label
+        return data
+    
     class Meta:
         model=Result
-        fields=['id','message','status','admin']
+        fields=['job_posting','message','status','admin']
 
 
 
   
 class JobPostingSerializer(serializers.ModelSerializer):
-
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['district'] = DistrictSerializer(instance.district).data
-        data['employer'] = UserSerializer(instance.employer).data
-        data['result'] =  ResultSerializer(instance.result).data if hasattr(instance,'result') else None
+        job_posting = JobPosting.objects.select_related('district', 'employer', 'result').get(id=instance.id)
+        data['district'] = DistrictSerializer(job_posting.district).data
+        data['employer'] = UserSerializer(job_posting.employer).data
+        if self.context.get("user_role") == UserRole.EMPLOYER:
+            data['result'] = ResultSerializer(job_posting.result).data if hasattr(instance, 'result') else None
         return data
         
     class Meta:
         model=JobPosting
         fields=['id','employer','job','district','salary','quantity']
 
-    
+class ApplySerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        data =  super().to_representation(instance)
+        data['apply_status_label'] = ApplyStatus(instance.apply_status).label
+        data['cv'] = CVSerializer(instance.cv).data
+        return data
+    class Meta:
+        model=Apply
+        fields=['id','cv','job_posting' ,'interviewing_date','apply_status']
+        
 class JobPostingDetailSerializer(serializers.ModelSerializer):
     
     def to_representation(self, instance):
         details = JobPosting.objects.\
-        select_related("apply").\
+        prefetch_related("apply").\
         values("id").\
         annotate(
+            seen_counting=Count("apply",Q(apply__apply_status__in=[ApplyStatus.PASSED,ApplyStatus.FAILED,ApplyStatus.INTERVIEWING,ApplyStatus.CANCEL,ApplyStatus.SEEN])),
+            reply_counting=Count("apply",Q(apply__apply_status__in=[ApplyStatus.PASSED,ApplyStatus.FAILED,ApplyStatus.INTERVIEWING,ApplyStatus.CANCEL])),
             apply_counting=Count("apply"),
-            pass_counting=Count("apply",Q(apply__apply_status=ApplyStatus.PASSED))
+            pass_counting=Count("apply", Q(apply__apply_status=ApplyStatus.PASSED))
         ).\
         get(id=instance.id)
         data = super().to_representation(instance)
-        data['apply_counting'] = details['apply_counting']
+        data['seen_counting'] = details['seen_counting']
         data['pass_counting'] = details['pass_counting']
-        data['district'] = DistrictSerializer(instance.district).data
-        data['employer'] = UserSerializer(instance.employer).data
-        data['result'] = ResultSerializer(instance.result).data if hasattr(instance, 'result') else None
+        data['reply_rate'] = details['reply_counting']/details['apply_counting'] if details['apply_counting'] else 0
+        
+        job_posting = JobPosting.objects.select_related('district', 'employer', 'result').get(id=instance.id)
+        data['district'] = DistrictSerializer(job_posting.district).data
+        data['employer'] = UserSerializer(job_posting.employer).data
+       
+     
+        if self.context.get("user_role") == UserRole.APPLICANT:
+            apply = Apply.objects.select_related('job_posting','cv').filter(job_posting__id=instance.id).filter(cv__applicant_id=self.context.get("applicant_id"))
+            data['apply'] = ApplySerializer(apply[0]).data if len(apply) else None
+        elif self.context.get("user_role") == UserRole.EMPLOYER:
+            data['result'] = ResultSerializer(job_posting.result).data if hasattr(job_posting, 'result') else None
+            
         data['job_type_label'] = JobType(instance.job_type).label
         return data
-    
+    def create(self, validated_data):
+        return super().create(validated_data)
     class Meta:
         model=JobPostingSerializer.Meta.model
         fields=JobPostingSerializer.Meta.fields+['description','requirements','job_type','address']
 
 
 
-class ApplySerializer(serializers.ModelSerializer):
-    class Meta:
-        model=Apply
-        fields=['id','cv','job', 'interviewing_date','expired_date','apply_status']
+
     
 
