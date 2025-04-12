@@ -28,10 +28,10 @@ export default StyleSheet.create({
         width: 150
     },
     bgColorBFDBFE: {
-        backgroundColor: '#BFDBFE'
+        backgroundColor: '#FEDBD0'
     },
     bgColorF8FAFC: {
-        backgroundColor: '#E0F2FE'
+        backgroundColor: '#FEEAE6'
     },
     flex1: {
         flex: 1
@@ -70,10 +70,10 @@ export default StyleSheet.create({
         fontSize: 15
     },
     color334155: {
-        color: '#334155'
+        color: 'white'
     },
     bgColorDBEAFE: {
-        backgroundColor: '#DBEAFE'
+        backgroundColor: '#442C2E'
     },
     flexWrapWrap: {
         flexWrap: 'wrap'

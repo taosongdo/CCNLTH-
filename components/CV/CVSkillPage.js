@@ -113,7 +113,7 @@ const CVSkillPage = () => {
         loadData()
     }, [])
     return (
-        <View style={[Styles.flex1, { backgroundColor: 'red' }]}>
+        <View style={[Styles.flex1, Styles.bgColorF8FAFC]}>
             <View style={Styles.p10}>
                 <ScrollList
                     List={skillList}

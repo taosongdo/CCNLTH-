@@ -1,6 +1,6 @@
-import { View, Alert } from 'react-native'
+import { View, Alert, Keyboard, TouchableWithoutFeedback, ScrollView } from 'react-native'
 import { useContext, useEffect, useState } from 'react';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { userContext } from '../../App';
 import WebView from 'react-native-webview';
 import InputBar from '../InputBar';
@@ -9,23 +9,36 @@ import * as Print from 'expo-print';
 import Styles from '../../Styles';
 import Apis, { endpoints } from '../../config/Apis';
 import TouchButton from '../TouchButton';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import InfoBar from '../InfoBar';
 
 
 
-const CVPage = () => {
+
+const CVPage = ({ navigation }) => {
     const route = useRoute();
     const params = route.params;
+
+    const navigationHook = useNavigation()
     const { token } = useContext(userContext)
     const [name, setName] = useState("")
     const [image, setImage] = useState("")
     const [cvInfomation, setCVInformation] = useState()
     const [loading, setLoading] = useState(true)
+    const [pickerShow, setPickerShow] = useState(false)
+    const [date, setDate] = useState(new Date())
+
+    const [applyId, setApplyId] = useState()
+    const [applyStatus, setApplyStatus] = useState()
+    const [applyStatusLabel, setApplyStatusLabel] = useState()
+    const [message, setMessage] = useState()
+    const [interviewingDate, setInterviewingDate] = useState()
+
     const printHTML = async () => {
         try {
             const { uri, name } = await Print.printToFileAsync({
                 html: htmlContent(cvInfomation)
             });
-            console.log(uri)
             const formData = new FormData()
             formData.append('image', {
                 uri: uri,
@@ -50,7 +63,7 @@ const CVPage = () => {
 
     const nameChangeHandler = async () => {
         try {
-            const res = await Apis.patch(`${endpoints['cvs-detail'](params.cvId)}`, {
+            const res = await Apis.patch(endpoints['cvs-detail'](params.cvId), {
                 name: name
             }, {
                 headers: {
@@ -64,59 +77,166 @@ const CVPage = () => {
         }
     }
 
+    const deleteApplyHandler = async () => {
+        try {
+            await Apis.delete(endpoints['applies-details'](params.applyId), {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            params.setCVId(null)
+            params.setApplyId(null)
+            params.setCVInformation(null)
+            navigationHook.goBack()
+        }
+        catch (err) {
+            console.log(err.response.data)
+        }
+    }
+    const hideTimePiker = () => {
+        setPickerShow(false)
+    }
+    const showTimePiker = () => {
+        setPickerShow(true)
+    }
+    const updateApplyHandler = async (applyStatus, interviewingDate) => {
+        try {
+            console.log(applyStatus)
+            const res = await Apis.post(endpoints['applies-more-infos-create'], {
+                apply: applyId,
+                apply_status: applyStatus,
+                interviewing_date: interviewingDate,
+                message: message
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
 
-    useEffect(() => {
-        async function loadData() {
+            })
+            console.log(res.data)
+            setInterviewingDate(res.data.interviewingDate ? res.data.interviewingDate : "")
+            setApplyStatus(res.data.apply_status)
+            setApplyStatusLabel(res.data.apply_status_label)
+        }
+        catch (err) {
+            console.log(err.response.data)
+        }
+
+    }
+    const changeDateHandler = async (event, selectedDate) => {
+        await updateApplyHandler(3, selectedDate)
+    }
+    const failHandler = async () => {
+        await updateApplyHandler(5, null)
+    }
+    const acceptCVHandler = async () => {
+        showTimePiker()
+    }
+    const loadData = async () => {
+        try {
             if (params) {
-                try {
-                    const res = await Apis.get(`${endpoints['cvs-detail'](params.cvId)}`, {
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        }
-                    })
+
+                const res = await Apis.get(`${params.cvId ? endpoints['cvs-detail'](params.cvId) : endpoints['applies-details'](params.applyId)}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                })
+                if (params.cvId) {
                     setName(res.data.name)
                     setImage(res.data.image)
                 }
-                catch (err) {
-                    console.log(err)
+                else {
+                    setImage(res.data.cv.image)
+                    setApplyId(res.data.id)
+                    setApplyStatus(res.data.apply_status)
+                    setApplyStatusLabel(res.data.apply_status_label)
+                    setInterviewingDate(res.data.interviewing_date ? res.data.interviewing_date : "")
+                    setMessage(res.data.message)
                 }
             }
             else {
-                try {
-                    const res = await Apis.get(`${endpoints['cv-information']}`, {
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        }
-                    })
-                    setCVInformation(res.data)
-                    setImage(true)
-                }
-                catch (err) {
-                    console.log(err)
-                }
+                const res = await Apis.get(`${endpoints['cv-information']}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                })
+                setCVInformation(res.data)
+                setImage(true)
             }
-            setLoading(false)
         }
+        catch (err) {
+            console.log(err)
+        }
+        setLoading(false)
+    }
+    useEffect(() => {
         loadData()
     }, [])
 
     return (
-        <View style={[Styles.flex1, Styles.bgColorBFDBFE]}>
-            <View style={[Styles.flexDirectionRow, Styles.bgColorBFDBFE, Styles.p10]}>
-                <InputBar value={name} TextChangeHandler={setName} placeholder={"điền tên"} noMargin={true} />
-            </View>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={[Styles.flex1, Styles.bgColorBFDBFE]}>
-                {!loading && <WebView Viewstyle={[Styles.bgColorBFDBFE, Styles.w100per]} source={params ? { uri: `https://docs.google.com/gview?embedded=true&url=${image}` } : { html: htmlContent(cvInfomation) }} />}
-            </View>
-            {params ?
-                <View style={[Styles.flexDirectionRow, Styles.bgColorBFDBFE, Styles.p10]}>
-                    <TouchButton title={"đổi tên"} backgroundColor="lightblue" pressHandler={nameChangeHandler} />
-                </View> :
-                <View style={[Styles.flexDirectionRow, Styles.bgColorBFDBFE, Styles.p10]}>
-                    <TouchButton title={"tạo cv"} backgroundColor="blue" pressHandler={printHTML} />
+                {(params && !params.applyId) &&
+                    <View style={[Styles.flexDirectionRow, Styles.bgColorF8FAFC, Styles.p10]}>
+                        <InputBar value={name} TextChangeHandler={setName} placeholder={"điền tên"} noMargin={true} />
+                    </View>
+
+                }
+                <View style={[Styles.flex1, Styles.bgColorBFDBFE]}>
+                    {!loading && <WebView style={[Styles.bgColorBFDBFE, Styles.w100per]} source={params ? { uri: `https://docs.google.com/gview?embedded=true&url=${image}` } : { html: htmlContent(cvInfomation) }} />}
                 </View>
-            }
-        </View>
+                <View style={[Styles.bgColorF8FAFC, Styles.p10]}>
+                    {params ?
+                        applyId ?
+                            applyStatus !== 1 ?
+                                <>
+                                    <ScrollView style={[Styles.marginBottom10,Styles.h150]}>
+                                        <InfoBar content={message} multiline={true} />
+                                    </ScrollView>
+                                    <InfoBar content={`${applyStatusLabel} - ${interviewingDate}`} />
+                                    {
+                                        !params.owner && <TouchButton title={"gỡ ứng tuyển"} pressHandler={deleteApplyHandler} />
+                                    }
+                                </> :
+                                <>
+                                    {
+                                        params.owner &&
+                                        <>
+                                            <View style={[Styles.h150, Styles.marginBottom10]}>
+                                                <InputBar value={message} TextChangeHandler={setMessage} placeholder={"điền thông điệp"} multiline={true} />
+                                            </View>
+                                            <DateTimePickerModal
+                                                isVisible={pickerShow}
+                                                mode="datetime"
+                                                date={date}
+                                                onConfirm={changeDateHandler}
+                                                onCancel={hideTimePiker}
+                                                is24Hour={true}
+                                                minimumDate={new Date()}
+                                            />
+                                        </>
+                                    }
+                                    {params.owner ?
+                                        <View style={[Styles.justifyContentBetween, Styles.flexDirectionRow]}>
+                                            <View style={Styles.w48per}>
+                                                <TouchButton title={"đánh rớt"} pressHandler={failHandler} />
+                                            </View>
+                                            <View style={Styles.w48per}>
+                                                <TouchButton title={"tiến hành phỏng vấn"} pressHandler={acceptCVHandler} />
+                                            </View>
+                                        </View>
+                                        :
+                                        <TouchButton title={"gỡ ứng tuyển"} pressHandler={deleteApplyHandler} />
+                                    }
+                                </>
+                            :
+                            <TouchButton title={"đổi tên"} pressHandler={nameChangeHandler} />
+                        :
+                        <TouchButton title={"tạo cv"} pressHandler={printHTML} />
+                    }
+                </View>
+            </View>
+        </TouchableWithoutFeedback>
     )
 }
 export default CVPage

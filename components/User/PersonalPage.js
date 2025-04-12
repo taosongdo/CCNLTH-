@@ -13,9 +13,10 @@ import ScrollList from "../ScrollList"
 import Styles from "../../Styles"
 import Apis, { endpoints } from "../../config/Apis"
 import Avatar from "../Avatar"
+import { deleteItem } from "../../config/util"
 
 const PersonalPage = ({ navigation }) => {
-    const { token, role } = useContext(userContext)
+    const { token, role, setToken, setRole } = useContext(userContext)
     const [avatar, setAvatar] = useState(null)
     const [email, setEmail] = useState(null)
     const [firstName, setFirstName] = useState(null)
@@ -51,7 +52,7 @@ const PersonalPage = ({ navigation }) => {
                 type: result.assets[0].mimeType || "application/octet-stream",
             });
             setLoading(true)
-            const res = await Apis.post(`${endpoints['cvs']}`, formData, {
+            const res = await Apis.post(`${endpoints['cvs-create']}`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "multipart/form-data"
@@ -66,26 +67,43 @@ const PersonalPage = ({ navigation }) => {
     };
     const loadData = async () => {
         if (token) {
-            setLoading(true)
-            const res = await Apis.get(`${endpoints['current-user']}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                }
-            })
-            setLoading(false)
-
-            setAvatar(res.data.avatar)
-            setEmail(res.data.email)
-            setFirstName(res.data.first_name)
-            setLastName(res.data.last_name)
-            setUsername(res.data.username)
-            setPhoneList(res.data.phones)
-            setCVList(res.data.cvs)
+            try {
+                setLoading(true)
+                const res = await Apis.get(`${endpoints['current-user']}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    }
+                })
+                setLoading(false)
+                setAvatar(res.data.avatar)
+                setEmail(res.data.email)
+                setFirstName(res.data.first_name)
+                setLastName(res.data.last_name)
+                setUsername(res.data.username)
+                setPhoneList(res.data.phones)
+                setCVList(res.data.cvs)
+            }
+            catch (err) {
+                console.log(err)
+            }
         }
     }
     const JobViewHandler = () => {
         navigation.navigate("trang danh sách bài đăng", { 'owner': 1 })
+    }
+    const deleteItemHandler = async (id) => {
+        try {
+            await Apis.delete(endpoints['cvs-detail'](id), {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            setCVList([...deleteItem(cvList, 'id', id)])
+        }
+        catch (err) {
+
+        }
     }
     useEffect(() => {
         loadData()
@@ -96,7 +114,7 @@ const PersonalPage = ({ navigation }) => {
             <View style={[Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.flex1, Styles.bgColorF8FAFC]} >
                 <Text style={[styles.textNot, Styles.color334155]}>vui lòng đăng nhập để xem</Text>
                 <View style={styles.viewButton}>
-                    <TouchButton  title="đăng nhập" pressHandler={pressHandler} />
+                    <TouchButton title="đăng nhập" pressHandler={pressHandler} />
                 </View>
             </View>
         )
@@ -106,7 +124,7 @@ const PersonalPage = ({ navigation }) => {
     }
     return (
         <View style={[Styles.alignItemsCenter, Styles.flex1, Styles.bgColorF8FAFC]} >
-            <Avatar avatar={avatar}/>
+            <Avatar avatar={avatar} />
             <View style={styles.viewContainer}>
                 <InfoBar title="họ và tên" content={`${lastName} ${firstName}`} />
                 <InfoBar title="tài khoản" content={`${username}`} />
@@ -128,11 +146,15 @@ const PersonalPage = ({ navigation }) => {
                         keyItems={{ 'cvId': 'id' }}
                         title="cv"
                         contentKeys={["name"]}
+                        deleteItemHandler={deleteItemHandler}
                     />
                 }
                 {role == 2 &&
                     <TouchButton title="xem bài đăng công việc" backgroundColor="blue" pressHandler={JobViewHandler} />
                 }
+                <View style={Styles.p10}>
+                    <TouchButton title="Đăng xuất" pressHandler={() => { setToken(null); setRole(null) }} />
+                </View>
 
             </View>
             {role == 1 &&
@@ -141,14 +163,14 @@ const PersonalPage = ({ navigation }) => {
                     enablePanDownToClose={true}
                 >
                     <BottomSheetView >
-                        <View style={[Styles.h240, Styles.bgColorBFDBFE, Styles.alignItemsCenter]}>
+                        <View style={[Styles.h240, Styles.bgColorF8FAFC, Styles.alignItemsCenter]}>
                             <View style={[Styles.w100per, Styles.p10]}>
                                 <InputBar value={name} TextChangeHandler={setName} placeholder={"đặt tên (sẽ lấy tên của file nếu để trống)"} noMargin={true} />
                             </View>
-                            <View style={[styles.nameView, Styles.bgColorBFDBFE, Styles.p10]}>
+                            <View style={[styles.nameView, Styles.p10]}>
                                 <TouchButton backgroundColor={"red"} title={`tải CV từ máy`} pressHandler={pickFile} />
                             </View>
-                            <View style={[styles.nameView, Styles.bgColorBFDBFE, Styles.p10]}>
+                            <View style={[styles.nameView, Styles.p10]}>
                                 <TouchButton backgroundColor={"blue"} title={`tạo cv online`} pressHandler={createCVPressHandler} />
                             </View>
                         </View>

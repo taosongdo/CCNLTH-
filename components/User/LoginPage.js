@@ -14,7 +14,7 @@ import Apis, { endpoints } from '../../config/Apis'
 const LoginPage = ({ navigation }) => {
     const navigationHook = useNavigation();
 
-    const [username, setUsername] = useState("TuanApplicant")
+    const [username, setUsername] = useState("TuanEmployer")
     const [password, setPassword] = useState("123")
 
     const [avatar, setAvatar] = useState(null)
@@ -157,8 +157,8 @@ const LoginPage = ({ navigation }) => {
     }
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={[Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.flex1, Styles.bgColorF8FAFC]}>
-                <View style={[styles.formLogin, Styles.borderRadius20, Styles.alignItemsCenter, Styles.bgColorBFDBFE, Styles.p10]}>
+            <View style={[Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.flex1, Styles.bgColorBFDBFE]}>
+                <View style={[styles.formLogin, Styles.borderRadius20, Styles.alignItemsCenter, Styles.bgColorF8FAFC, Styles.p10]}>
                     {!checkLogin &&
                         <>
                             <View style={[Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.w100per, Styles.p10]}>

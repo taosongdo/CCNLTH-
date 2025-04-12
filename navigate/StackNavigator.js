@@ -12,6 +12,7 @@ import { useContext } from "react";
 import { userContext } from "../App";
 import JobPage from "../components/Job/JobPage";
 import IndexPage from "../components/Home/IndexPage";
+import CVSelectPage from "../components/Job/CVSelectPage";
 const StackNavigator = () => {
     const Stack = createStackNavigator()
     const { token, role } = useContext(userContext)
@@ -29,40 +30,53 @@ const StackNavigator = () => {
                     component={LoginPage}
                 />
                 <Stack.Screen
-                    name="trang CV"
-                    component={CVPage}
-                />
-                <Stack.Screen
-                    name="trang tạo CV"
-                    component={CVCreatorPage}
-                />
-                <Stack.Screen
-                    name="trang thêm kinh nghiệm"
-                    component={CVExperienceCreatorPage}
-                />
-                <Stack.Screen
-                    name="trang học vấn"
-                    component={EducationLevelPage}
-                />
-                <Stack.Screen
-                    name="trang tiêu chí công việc"
-                    component={JobSearchCriteria}
-                />
-                <Stack.Screen
-                    name="trang kĩ năng"
-                    component={CVSkillPage}
-                />
-                {
-                    role == 2 &&
-                    <Stack.Screen
-                        name="trang danh sách bài đăng"
-                        component={IndexPage}
-                    />
-                }
-                <Stack.Screen
                     name="trang công việc"
                     component={JobPage}
                 />
+                {token &&
+                    <>
+                        <Stack.Screen
+                            name="trang chọn CV"
+                            component={CVSelectPage}
+                        />
+                        <Stack.Screen
+                            name="trang CV"
+                            component={CVPage}
+                        />
+                        {
+                            role == 1 &&
+                            <>
+                                <Stack.Screen
+                                    name="trang tạo CV"
+                                    component={CVCreatorPage}
+                                />
+                                <Stack.Screen
+                                    name="trang thêm kinh nghiệm"
+                                    component={CVExperienceCreatorPage}
+                                />
+                                <Stack.Screen
+                                    name="trang học vấn"
+                                    component={EducationLevelPage}
+                                />
+                                <Stack.Screen
+                                    name="trang tiêu chí công việc"
+                                    component={JobSearchCriteria}
+                                />
+                                <Stack.Screen
+                                    name="trang kĩ năng"
+                                    component={CVSkillPage}
+                                />
+                            </>
+                        }
+                        {
+                            role == 2 &&
+                            <Stack.Screen
+                                name="trang danh sách bài đăng"
+                                component={IndexPage}
+                            />
+                        }
+                    </>
+                }
             </Stack.Navigator>
         </NavigationContainer>
     )

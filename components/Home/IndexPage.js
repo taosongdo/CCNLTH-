@@ -47,9 +47,9 @@ const IndexPage = ({ navigation }) => {
     const search = async ({ keyword, name, salaryMax, salaryMin, jobType }) => {
         loadData({ keyword, name, salaryMax, salaryMin, jobType })
     }
-    const pressHandler = (id) => {
+    const pressHandler = (id, owner) => {
         if (token) {
-            navigation.navigate("trang công việc", { id: id })
+            navigation.navigate("trang công việc", { id: id, owner: owner })
         }
         else {
             Alert.alert(

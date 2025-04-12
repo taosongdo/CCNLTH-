@@ -17,16 +17,18 @@ const ScrollList = (props) => {
                 <Text style={[styles.textCVTitle, Styles.verticalAlignMiddle, Styles.textAlignCenter, Styles.flex1]}>
                     {props.listName}
                 </Text>
-                <View style={[{ margin: 7 }, Styles.w60]}>
-                    <TouchButton backgroundColor={"blue"} title="+" pressHandler={() => {
-                        if (props.bottomSheetRef) {
-                            props.bottomSheetRef.current?.expand()
-                        }
-                        else {
-                            props.addNewItem()
-                        }
-                    }} />
-                </View>
+                {(props.addNewItem || props.bottomSheetRef) &&
+                    <View style={[{ margin: 7 }, Styles.w60]}>
+                        <TouchButton backgroundColor={"blue"} title="+" pressHandler={() => {
+                            if (props.bottomSheetRef) {
+                                props.bottomSheetRef.current?.expand()
+                            }
+                            else {
+                                props.addNewItem()
+                            }
+                        }} />
+                    </View>
+                }
             </View>
             <FlatList
                 data={props.List}
@@ -38,9 +40,11 @@ const ScrollList = (props) => {
                         <View style={Styles.flex1}>
                             <TouchButton title={`${props.contentKeys.map((contentKey) => { return item[contentKey] }).join(" - ")}`} params={paramsParser(item, props.keyItems)} backgroundColor={"blue"} pressHandler={props.itemPressHandler} />
                         </View>
-                        <View style={[styles.viewButton, Styles.w60, Styles.h60]}>
-                            <TouchButton backgroundColor={"red"} title={"-"} height={'100%'} pressHandler={() => { props.deleteItemHandler(item.id) }} />
-                        </View>
+                        {props.deleteItemHandler &&
+                            <View style={[styles.viewButton, Styles.w60, Styles.h60]}>
+                                <TouchButton title={"-"} height={'100%'} pressHandler={() => { props.deleteItemHandler(item.id) }} />
+                            </View>
+                        }
                     </View>
                 )}
                 refreshControl={
@@ -58,7 +62,7 @@ const styles = StyleSheet.create({
         borderTopRightRadius: 10,
     },
     viewCVList: {
-        borderColor: "#DDE2E6",
+        borderColor: "#FEDBD0",
         borderBottomLeftRadius: 10,
         borderBottomRightRadius: 10,
         borderWidth: 5,

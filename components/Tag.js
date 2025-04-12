@@ -6,23 +6,21 @@ const Tag = (props) => {
     const item = props.item
     const params = props.params
     const setBackgroundColor = () => {
-        return params ? (item.result ? (item.result.status == 1 ? { backgroundColor: 'green' } : { backgroundColor: "pink" }) : { backgroundColor: "yellow" }) : Styles.bgColorBFDBFE
+        return params ? (item.result ? (item.result.status == 1 ? { backgroundColor: 'lightgreen' } : { backgroundColor: "pink" }) : { backgroundColor: "yellow" }) : Styles.bgColorBFDBFE
     }
 
     return (
-        <Pressable style={[styles.TagView, setBackgroundColor(), Styles.borderRadius20, Styles.h150]} onPress={() => { props.pressHandler(item.id) }}>
+        <Pressable style={[styles.TagView, setBackgroundColor(), Styles.borderRadius20, Styles.h150]} onPress={() => { props.pressHandler(item.id, params ? 1 : null) }}>
             <View style={[styles.TagViewName, Styles.alignItemsCenter, Styles.justifyContentCenter]}>
                 <Text style={styles.TagName}>
                     {item.job}
                 </Text>
             </View>
             <View style={[styles.TagInfo, Styles.flex1]}>
-
-                <View style={[styles.TagViewItem, Styles.alignItemsCenter, Styles.flexDirectionRow, Styles.justifyContentCenter]}><Image style={[styles.avatar, Styles.h45,Styles.borderRadius100]} source={{ uri: item.employer.avatar }} /><Text style={[styles.TagItem, Styles.color334155, Styles.fontSize15, Styles.verticalAlignMiddle, Styles.textAlignCenter]}>{item.employer.last_name} {item.employer.first_name}</Text></View>
-
-                <View style={[styles.TagViewItem, Styles.alignItemsCenter, Styles.flexDirectionRow, Styles.justifyContentCenter]}><FontAwesome5 name="dollar-sign" size={20} color="#222831" /><Text style={[styles.TagItem, Styles.color334155, Styles.fontSize15, Styles.verticalAlignMiddle, Styles.textAlignCenter]}>{Intl.NumberFormat("en-US").format(item.salary)} VNĐ</Text></View>
-                <View style={[styles.TagViewItem, Styles.alignItemsCenter, Styles.flexDirectionRow, Styles.justifyContentCenter]}><FontAwesome5 name="users" size={20} color="#222831" /><Text style={[styles.TagItem, Styles.color334155, Styles.fontSize15, Styles.verticalAlignMiddle, Styles.textAlignCenter]}>{item.quantity} người</Text></View>
-                <View style={[styles.TagViewItem, Styles.alignItemsCenter, Styles.flexDirectionRow, Styles.justifyContentCenter]}><FontAwesome5 name="map-marker-alt" size={20} color="#222831" /><Text style={[styles.TagItem, Styles.color334155, Styles.fontSize15, Styles.verticalAlignMiddle, Styles.textAlignCenter]}>{item.district.name} {item.district.city.name}</Text></View>
+                <View style={[styles.TagViewItem, Styles.alignItemsCenter, Styles.flexDirectionRow, Styles.justifyContentCenter]}><Image style={[styles.avatar, Styles.h45, Styles.borderRadius100]} source={{ uri: item.employer.avatar }} /><Text style={[styles.TagItem, Styles.fontSize15, Styles.verticalAlignMiddle, Styles.textAlignCenter]}>{item.employer.last_name} {item.employer.first_name}</Text></View>
+                <View style={[styles.TagViewItem, Styles.alignItemsCenter, Styles.flexDirectionRow, Styles.justifyContentCenter]}><FontAwesome5 name="dollar-sign" size={20} color="#222831" /><Text style={[styles.TagItem, Styles.fontSize15, Styles.verticalAlignMiddle, Styles.textAlignCenter]}>{Intl.NumberFormat("en-US").format(item.salary)} VNĐ</Text></View>
+                <View style={[styles.TagViewItem, Styles.alignItemsCenter, Styles.flexDirectionRow, Styles.justifyContentCenter]}><FontAwesome5 name="users" size={20} color="#222831" /><Text style={[styles.TagItem, Styles.fontSize15, Styles.verticalAlignMiddle, Styles.textAlignCenter]}>{item.quantity} người</Text></View>
+                <View style={[styles.TagViewItem, Styles.alignItemsCenter, Styles.flexDirectionRow, Styles.justifyContentCenter]}><FontAwesome5 name="map-marker-alt" size={20} color="#222831" /><Text style={[styles.TagItem, Styles.fontSize15, Styles.verticalAlignMiddle, Styles.textAlignCenter]}>{item.district.name} {item.district.city.name}</Text></View>
             </View>
         </Pressable>
     )

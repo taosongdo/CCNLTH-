@@ -1,13 +1,13 @@
 import axios from "axios"
 
-const BASE_URL = 'http://192.168.0.102:8000'
+const BASE_URL = 'http://192.168.0.103:8000'
 
 export const endpoints = {
-    'job-postings': '/users/job-postings/',
-    'job-postings-detail': (id) => (`/job-postings/${id}/`),
-    'cvs': '/cvs/',
+
+    'cvs': '/users/cvs/',
     'current-user': '/users/current-user/',
     'cvs-detail': (id) => (`/cvs/${id}/`),
+    'cvs-create': `/cvs/`,
     'cv-information': '/users/cv-information/',
 
     'experiences': '/users/experiences/',
@@ -21,6 +21,14 @@ export const endpoints = {
     'skills': '/users/skills/',
     'skills-create': '/skills/',
     'skills-detail': (id) => (`/skills/${id}/`),
+
+    'job-postings': '/users/job-postings/',
+    'job-postings-detail': (id) => (`/job-postings/${id}/`),
+
+    'applies': (id) => `/job-postings/${id}/applies/`,
+    'applies-details': (id) => (`/applies/${id}/`),
+    'applies-create': '/applies/',
+    'applies-more-infos-create': '/applies-more-infos/',
 
     'cities': '/cities/',
     'users': '/users/',
