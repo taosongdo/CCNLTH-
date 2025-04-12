@@ -3,6 +3,7 @@ from datetime import datetime,timedelta
 from django.http import HttpResponse
 from job.serializers import \
     ApplySerializer,  \
+    ApplyDetailSerializer, \
     UserDetailSerializer, \
     JobPostingSerializer, \
     ResultSerializer, \
@@ -20,8 +21,9 @@ from job.serializers import \
     JobSearchCriteriaDetailSerializer,\
     ExperienceSerializer,\
     ExperienceDetailSerializer,\
-    JobSearchCriteriaSerializer
-from job.models import CV, Apply, User, JobPosting, ResultStatus, UserRole,ApplyStatus,City,District,Skill,EducationLevel,Experience,Result
+    JobSearchCriteriaSerializer, \
+    ApplyDateAndMessageSerializer
+from job.models import CV, Apply, User, JobPosting, ResultStatus, UserRole,ApplyStatus,City,District,Skill,EducationLevel,Experience,Result,ApplyDateAndMessage
 from job.paginator import Paginator
 from rest_framework.response import Response
 from rest_framework import viewsets, generics, status, permissions
@@ -31,7 +33,7 @@ from django.contrib.auth import authenticate
 from oauth2_provider.views import TokenView
 import json
 
-from job.perms import IsApplicant,IsEmployer,IsAdmin, IsEmployerOwner, IsApplicantOwner
+from job.perms import IsApplicant,IsEmployer,IsAdmin, IsEmployerOwner, IsApplicantOwner, IsCVEmployerOrApplicantOwner, IsCVApplicantOwner, IsCVEmployerOwner
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     queryset = User.objects.filter(is_active=True)
@@ -278,7 +280,7 @@ class JobPostingViewSet(viewsets.ViewSet, generics.CreateAPIView,generics.Retrie
                     setattr(job_posting, key, request.data[key])
         return super().update(request, *args, **kwargs)
         
-    @action(methods=['get'],detail=True,url_path="cvs")
+    @action(methods=['get'],detail=True,url_path="applies")
     def get_cvs(self, request,pk):
         apply = Apply.objects.filter(job_posting=pk)
         return Response(ApplySerializer(apply, many=True).data, status=status.HTTP_200_OK)
@@ -330,44 +332,53 @@ class CVViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView
         return Response(ApplySerializer(applies).data,status=status.HTTP_200_OK)
     
 
-class ApplyViewSet(viewsets.ViewSet,generics.CreateAPIView ,generics.UpdateAPIView,generics.DestroyAPIView):
+class ApplyViewSet(viewsets.ViewSet,generics.RetrieveAPIView,generics.CreateAPIView ,generics.UpdateAPIView,generics.DestroyAPIView):
     queryset = Apply.objects.filter(active=True)
-    serializer_class = ApplySerializer
+    serializer_class = ApplyDetailSerializer
     def get_permissions(self):
-        if self.action.__eq__("partial_update"):
-            return [IsEmployer()]
-        return [IsApplicant()]
+        
+        if self.action.__eq__("retrieve"):
+            return [IsCVEmployerOrApplicantOwner()]
+        return [IsCVApplicantOwner()]
+    
     
     def create(self, request, *args, **kwargs):
-        apply_serializer = ApplySerializer(data={
+        apply_serializer = ApplyDetailSerializer(data={
             'cv': request.data.get("cv"),
-            'job_posting': request.data.get("job_posting")
+            'job_posting': request.data.get("job_posting"),
+            'message': request.data.get("message")
         })
         apply_serializer.is_valid(raise_exception=True)
         apply = apply_serializer.save()
-        return Response(ApplySerializer(apply).data, status=status.HTTP_201_CREATED)
-    
-    def update(self, request, *args, **kwargs):
-        apply_status = request.data.get("apply_status")
-        apply =self.get_object()
-        try:
-            for k in request.data:
-                if k in ["apply_status","interviewing_date"]:
-                    apply[k] = request.data[k] 
-            apply.save()           
-            return Response(ApplySerializer(apply).data, status=status.HTTP_201_CREATED)
-        except ValueError as ex:
-            return Response({"message":f"{ex}"}, status=status.HTTP_201_CREATED)
-        
+        return Response(ApplyDetailSerializer(apply).data, status=status.HTTP_201_CREATED)
     
     
     def destroy(self, request, *args, **kwargs):
         apply = self.get_object()
-        if apply.apply_status in [ApplyStatus.SENT, ApplyStatus.SEEN]:
+        if apply.apply_status in [ApplyStatus.SENT, ApplyStatus.SEEN, ApplyStatus.FAILED]:
             self.perform_destroy(apply)
             return Response(status=status.HTTP_200_OK)
         return Response({"message":"không thể xóa vì đã được nhà tuyển dụng đã chấp nhận"}, status=status.HTTP_400_BAD_REQUEST)
 
+class ApplyMoreInfoViewSet(viewsets.ViewSet,generics.CreateAPIView):
+    queryset = ApplyDateAndMessage.objects.filter(active=True)
+    serializer_class = ApplyDateAndMessageSerializer
+    permission_classes=[IsCVEmployerOwner]
+    
+    def create(self, request, *args, **kwargs):
+        apply_data_and_message_serializer = ApplyDateAndMessageSerializer(data=request.data)
+        apply_data_and_message_serializer.is_valid(raise_exception=True)
+        
+        apply = request.data.get("apply")
+        apply_status = request.data.get("apply_status")
+        print(apply_status)
+        Apply.objects.filter(active=True, id=apply).update(apply_status=apply_status)
+        apply_data_and_message = apply_data_and_message_serializer.save()
+        
+    
+        return Response(ApplyDateAndMessageSerializer(apply_data_and_message,context={"apply_status":apply_status}).data,status=status.HTTP_201_CREATED)
+
+    
 class CityViewSet(viewsets.ViewSet,generics.ListAPIView):
     queryset=City.objects.filter(active=True)
     serializer_class=CitySerializer

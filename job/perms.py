@@ -22,5 +22,15 @@ class IsEmployerOwner(IsEmployer):
     def has_object_permission(self, request, view, obj):
         return super().has_permission(request,view) and obj.employer == request.user
 
+class IsCVEmployerOrApplicantOwner(permissions.IsAuthenticated):
+    def has_object_permission(self, request, view, obj):
+        return super().has_permission(request,view) and (obj.job_posting.employer == request.user or obj.cv.applicant == request.user)
 
+class IsCVApplicantOwner(IsApplicant):
+      def has_object_permission(self, request, view, obj):
+        return super().has_permission(request,view) and obj.cv.applicant == request.user
+    
+class IsCVEmployerOwner(IsEmployer):
+    def has_object_permission(self, request, view, obj):
+        return super().has_permission(request,view) and obj.job_posting.employer == request.user 
 

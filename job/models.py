@@ -116,9 +116,13 @@ class ApplyStatus(models.IntegerChoices):
 class Apply(BaseModel):
     cv = models.ForeignKey(CV, on_delete=models.CASCADE)
     job_posting = models.ForeignKey(JobPosting, on_delete=models.CASCADE)
-    interviewing_date = models.DateTimeField(null=True)
     apply_status = models.IntegerField(choices=ApplyStatus.choices, default=ApplyStatus.SENT)
-    message = models.CharField(max_length=200)
+
+
+class ApplyDateAndMessage(BaseModel):
+    apply = models.OneToOneField(Apply, primary_key=True,on_delete = models.CASCADE)
+    message = models.TextField()
+    interviewing_date = models.DateTimeField(null=True,blank=True)
     
 
 

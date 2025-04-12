@@ -1,4 +1,4 @@
-from job.models import CV, Result, User,JobPosting, Apply,ApplyStatus,City,District,Phone,Experience,EducationLevel,Skill,JobSearchCriteria,JobType,UserRole,ResultStatus
+from job.models import CV, Result, User,JobPosting, Apply,ApplyStatus,City,District,Phone,Experience,EducationLevel,Skill,JobSearchCriteria,JobType,UserRole,ResultStatus,ApplyDateAndMessage
 from rest_framework import serializers
 from django.db.models import Count, Q
 
@@ -165,11 +165,37 @@ class ApplySerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data =  super().to_representation(instance)
         data['apply_status_label'] = ApplyStatus(instance.apply_status).label
-        data['cv'] = CVSerializer(instance.cv).data
+        cv = instance.cv
+        data['cv_name'] = cv.name
+        data['cv_id'] = cv.id 
         return data
     class Meta:
         model=Apply
-        fields=['id','cv','job_posting' ,'interviewing_date','apply_status']
+        fields=['id','cv','job_posting','apply_status']
+
+class ApplyDateAndMessageSerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["apply_status"] = self.context["apply_status"]
+        data["apply_status_label"] = ApplyStatus(self.context["apply_status"]).label
+        return data
+    
+    class Meta:
+        model= ApplyDateAndMessage
+        fields=['apply','interviewing_date','message']
+        
+class ApplyDetailSerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        data =  super().to_representation(instance)
+        data['apply_status_label'] = ApplyStatus(instance.apply_status).label
+        data['cv'] = CVDetailSerializer(instance.cv).data
+        more_info = instance.applydateandmessage if hasattr(instance, 'applydateandmessage') else None
+        data['interviewing_date'] = more_info.interviewing_date if more_info else None 
+        data['message'] = more_info.message if more_info else None 
+        return data
+    class Meta:
+        model=ApplySerializer.Meta.model
+        fields = ApplySerializer.Meta.fields
         
 class JobPostingDetailSerializer(serializers.ModelSerializer):
     
@@ -197,6 +223,7 @@ class JobPostingDetailSerializer(serializers.ModelSerializer):
         if self.context.get("user_role") == UserRole.APPLICANT:
             apply = Apply.objects.select_related('job_posting','cv').filter(job_posting__id=instance.id).filter(cv__applicant_id=self.context.get("applicant_id"))
             data['apply'] = ApplySerializer(apply[0]).data if len(apply) else None
+            
         elif self.context.get("user_role") == UserRole.EMPLOYER:
             data['result'] = ResultSerializer(job_posting.result).data if hasattr(job_posting, 'result') else None
             
