@@ -1,4 +1,4 @@
-import { View, Alert, Keyboard, TouchableWithoutFeedback, ScrollView } from 'react-native'
+import { View, Alert, Keyboard, TouchableWithoutFeedback, ScrollView, StyleSheet } from 'react-native'
 import { useContext, useEffect, useState } from 'react';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { userContext } from '../../App';
@@ -101,7 +101,7 @@ const CVPage = ({ navigation }) => {
     }
     const updateApplyHandler = async (applyStatus, interviewingDate) => {
         try {
-            console.log(applyStatus)
+
             const res = await Apis.post(endpoints['applies-more-infos-create'], {
                 apply: applyId,
                 apply_status: applyStatus,
@@ -113,8 +113,7 @@ const CVPage = ({ navigation }) => {
                 }
 
             })
-            console.log(res.data)
-            setInterviewingDate(res.data.interviewingDate ? res.data.interviewingDate : "")
+            setInterviewingDate(res.data.interviewing_date ? res.data.interviewing_date : "")
             setApplyStatus(res.data.apply_status)
             setApplyStatusLabel(res.data.apply_status_label)
         }
@@ -123,8 +122,8 @@ const CVPage = ({ navigation }) => {
         }
 
     }
-    const changeDateHandler = async (event, selectedDate) => {
-        await updateApplyHandler(3, selectedDate)
+    const changeDateHandler = async () => {
+        await updateApplyHandler(3, date)
     }
     const failHandler = async () => {
         await updateApplyHandler(5, null)
@@ -190,12 +189,12 @@ const CVPage = ({ navigation }) => {
                         applyId ?
                             applyStatus !== 1 ?
                                 <>
-                                    <ScrollView style={[Styles.marginBottom10,Styles.h150]}>
+                                    <ScrollView style={[Styles.marginBottom10, styles.maxHeight150]}>
                                         <InfoBar content={message} multiline={true} />
                                     </ScrollView>
                                     <InfoBar content={`${applyStatusLabel} - ${interviewingDate}`} />
                                     {
-                                        !params.owner && <TouchButton title={"gỡ ứng tuyển"} pressHandler={deleteApplyHandler} />
+                                        (!params.owner && applyStatus == 5) && <TouchButton title={"gỡ ứng tuyển"} pressHandler={deleteApplyHandler} />
                                     }
                                 </> :
                                 <>
@@ -240,4 +239,9 @@ const CVPage = ({ navigation }) => {
     )
 }
 export default CVPage
+const styles = StyleSheet.create({
+    maxHeight150: {
+        maxHeight: 150
+    }
+})
 

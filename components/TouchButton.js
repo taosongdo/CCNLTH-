@@ -3,7 +3,7 @@ import Styles from "../Styles"
 
 const TouchButton = (props) => {
     return (
-        <Pressable style={[Styles.marginBottom10, Styles.borderRadius10, Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.w100per, Styles.h45, Styles.bgColorDBEAFE]}
+        <Pressable style={[Styles.marginBottom10, Styles.borderRadius10, Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.w100per, Styles.h45, Styles.bgColorDBEAFE, props.bgColor ? { backgroundColor: 'pink' } : {}]}
             onPress={() => {
                 if (props.params) {
                     props.pressHandler(props.params)

@@ -13,6 +13,7 @@ import { userContext } from "../App";
 import JobPage from "../components/Job/JobPage";
 import IndexPage from "../components/Home/IndexPage";
 import CVSelectPage from "../components/Job/CVSelectPage";
+import JobCreatorPage from "../components/Job/JobCreatorPage";
 const StackNavigator = () => {
     const Stack = createStackNavigator()
     const { token, role } = useContext(userContext)
@@ -70,10 +71,16 @@ const StackNavigator = () => {
                         }
                         {
                             role == 2 &&
-                            <Stack.Screen
-                                name="trang danh sách bài đăng"
-                                component={IndexPage}
-                            />
+                            <>
+                                <Stack.Screen
+                                    name="trang danh sách bài đăng"
+                                    component={IndexPage}
+                                />
+                                <Stack.Screen
+                                    name="trang tạo bài đăng công việc"
+                                    component={JobPage}
+                                />
+                            </>
                         }
                     </>
                 }

@@ -41,6 +41,7 @@ const PersonalPage = ({ navigation }) => {
     }
 
     const pickFile = async () => {
+        setLoading(true)
         try {
             let result = await DocumentPicker.getDocumentAsync({ type: "application/pdf" });
             if (result.canceled) { return };
@@ -51,19 +52,18 @@ const PersonalPage = ({ navigation }) => {
                 name: result.assets[0].name,
                 type: result.assets[0].mimeType || "application/octet-stream",
             });
-            setLoading(true)
             const res = await Apis.post(`${endpoints['cvs-create']}`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "multipart/form-data"
                 },
             })
-            setLoading(false)
             setCVList([...cvList, { id: res.data.id, name: res.data.name }])
         }
         catch (err) {
             console.log(err.response.data)
         }
+        setLoading(false)
     };
     const loadData = async () => {
         if (token) {
@@ -112,7 +112,7 @@ const PersonalPage = ({ navigation }) => {
     if (token === null) {
         return (
             <View style={[Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.flex1, Styles.bgColorF8FAFC]} >
-                <Text style={[styles.textNot, Styles.color334155]}>vui lòng đăng nhập để xem</Text>
+                <Text style={styles.textNot}>vui lòng đăng nhập để xem</Text>
                 <View style={styles.viewButton}>
                     <TouchButton title="đăng nhập" pressHandler={pressHandler} />
                 </View>
@@ -152,9 +152,9 @@ const PersonalPage = ({ navigation }) => {
                 {role == 2 &&
                     <TouchButton title="xem bài đăng công việc" backgroundColor="blue" pressHandler={JobViewHandler} />
                 }
-                <View style={Styles.p10}>
-                    <TouchButton title="Đăng xuất" pressHandler={() => { setToken(null); setRole(null) }} />
-                </View>
+
+                <TouchButton title="Đăng xuất" pressHandler={() => { setToken(null); setRole(null) }} />
+
 
             </View>
             {role == 1 &&

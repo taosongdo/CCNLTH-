@@ -77,6 +77,9 @@ export default StyleSheet.create({
     },
     flexWrapWrap: {
         flexWrap: 'wrap'
+    },
+    w30per: {
+        width: '30%'
     }
 
 })

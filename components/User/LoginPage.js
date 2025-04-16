@@ -194,13 +194,13 @@ const LoginPage = ({ navigation }) => {
                                 <InputBar value={gmail} TextChangeHandler={setGmail} placeholder={"gmail"} keyboardType={"email-address"} />
                             </View>
                             <View style={[Styles.flexDirectionRow, Styles.justifyContentBetween, Styles.w100per]}>
-                                <View style={styles.view1on3}>
+                                <View style={Styles.w30per}>
                                     <InputBar value={firstName} TextChangeHandler={setFirstName} placeholder={"tên"} />
                                 </View>
-                                <View style={styles.view1on3}>
+                                <View style={Styles.w30per}>
                                     <InputBar value={lastName} TextChangeHandler={setLastName} placeholder={"họ và tên lót"} />
                                 </View>
-                                <View style={styles.view1on3}>
+                                <View style={Styles.w30per}>
                                     <TouchButton title={gender ? "nam" : "nữ"} backgroundColor={gender ? "lightblue" : "pink"} pressHandler={() => { setGender(!gender) }} />
                                 </View>
                             </View>
@@ -244,9 +244,6 @@ export default LoginPage
 const styles = StyleSheet.create({
     formLogin: {
         width: 350
-    },
-    view1on3: {
-        width: '30%'
     },
     list: {
         borderWidth: 0,

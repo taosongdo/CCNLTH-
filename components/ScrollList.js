@@ -12,14 +12,14 @@ const ScrollList = (props) => {
         return paramsObject
     }
     return (
-        <>
+        <View style={Styles.marginBottom10}>
             <View style={[styles.viewCVTitle, Styles.flexDirectionRow, Styles.justifyContentCenter, Styles.bgColorBFDBFE, Styles.h60]}>
                 <Text style={[styles.textCVTitle, Styles.verticalAlignMiddle, Styles.textAlignCenter, Styles.flex1]}>
                     {props.listName}
                 </Text>
                 {(props.addNewItem || props.bottomSheetRef) &&
                     <View style={[{ margin: 7 }, Styles.w60]}>
-                        <TouchButton backgroundColor={"blue"} title="+" pressHandler={() => {
+                        <TouchButton title="+" pressHandler={() => {
                             if (props.bottomSheetRef) {
                                 props.bottomSheetRef.current?.expand()
                             }
@@ -51,7 +51,7 @@ const ScrollList = (props) => {
                     <RefreshControl refreshing={refreshing} onRefresh={props.loadData} />
                 }
             />
-        </>
+        </View>
     )
 }
 export default ScrollList
