@@ -1,5 +1,6 @@
 from datetime import datetime,timedelta
-
+from django.db.models import Count
+from django.forms import ValidationError
 from django.http import HttpResponse
 from job.serializers import \
     ApplySerializer,  \
@@ -45,24 +46,29 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
         user_serializer = UserDetailSerializer(data=data)
         user_serializer.is_valid(raise_exception=True)
         user = user_serializer.save()
-        
-        phone_number_1 = data['phone_number_1']
-        phone_number_1_serializer = PhoneSerializer(data={
-            'user':user.id,
-            'phone':phone_number_1
-        })
-        phone_number_1_serializer.is_valid(raise_exception=True)
-        phone_number_1 = phone_number_1_serializer.save()
-
-        if 'phone_number_2' in data:
-            phone_number_2=data['phone_number_2']
-            phone_number_2_serializer = PhoneSerializer(data={
+        try:
+            phone_number_1 = data['phone_number_1']
+            phone_number_1_serializer = PhoneSerializer(data={
                 'user':user.id,
-                'phone':phone_number_2
+                'value':phone_number_1
             })
-            phone_number_2_serializer.is_valid(raise_exception=True)
-            phone_number_2 = phone_number_2_serializer.save()
-        return Response(UserDetailSerializer(user).data,status=status.HTTP_201_CREATED)
+            phone_number_1_serializer.is_valid(raise_exception=True)
+           
+
+            if 'phone_number_2' in data:
+                phone_number_2=data['phone_number_2']
+                phone_number_2_serializer = PhoneSerializer(data={
+                    'user':user.id,
+                    'value':phone_number_2
+                })
+                phone_number_2_serializer.is_valid(raise_exception=True)
+                phone_number_2 = phone_number_2_serializer.save()
+            phone_number_1 = phone_number_1_serializer.save()
+            return Response(UserDetailSerializer(user).data,status=status.HTTP_201_CREATED)
+        except Exception as ex:
+            if user:
+                user.delete()
+            return Response({"message":f"{ex}"},status=status.HTTP_400_BAD_REQUEST)
     
  
     
@@ -138,6 +144,8 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
         query = queryset.exclude(result=None).filter(result__status=ResultStatus.PASSED)
         user = request.user
 
+        
+        
         if request.user.is_authenticated and request.user.role == UserRole.EMPLOYER:
             owner = request.query_params.get("owner")
             if owner:
@@ -147,6 +155,18 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
         if request.user.is_authenticated and request.user.role == UserRole.ADMIN:
             query = queryset
 
+        sort_by_date = request.query_params.get("sort_by_date")
+        if sort_by_date:
+            queryset.order_by("created_date")
+            
+        sort_by_salary = request.query_params.get("sort_by_salary")
+        if sort_by_salary:
+            queryset.order_by("salary")
+            
+        sort_by_popularity = request.query_params.get("sort_by_popularity")
+        if sort_by_popularity:
+            queryset.annotate(apply_count=Count("apply")).order_by("apply_count")
+            
         salary_max = request.query_params.get("salary_max")
         if salary_max:
             query = query.filter(salary__lt=float(salary_max))
@@ -161,7 +181,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
         
         keyword = request.query_params.get("keyword")
         if keyword:
-            query = query.filter(Q(job__icontains=keyword)|Q(description__icontains=keyword)|Q(requirements__icontains=keyword))
+            query = query.filter(Q(job__icontains=keyword)|Q(description__icontains=keyword)|Q(requirements__icontains=keyword)|Q(district__name__icontains=keyword)|Q(district__city__name__icontains=keyword))
             
         paginator = Paginator()
         page = paginator.paginate_queryset(query, request)
@@ -234,7 +254,7 @@ class ExperienceViewSet(viewsets.ViewSet,generics.CreateAPIView,generics.Retriev
             return Response({"message":"đã đạt tới hạn mức"},status=status.HTTP_400_BAD_REQUEST)
     
     
-class JobPostingViewSet(viewsets.ViewSet, generics.CreateAPIView,generics.RetrieveAPIView,generics.UpdateAPIView):
+class JobPostingViewSet(viewsets.ViewSet, generics.CreateAPIView,generics.RetrieveAPIView,generics.UpdateAPIView,generics.DestroyAPIView):
     queryset = JobPosting.objects.filter(active=True)
     serializer_class = JobPostingDetailSerializer
 
@@ -249,37 +269,37 @@ class JobPostingViewSet(viewsets.ViewSet, generics.CreateAPIView,generics.Retrie
         return Response(JobPostingDetailSerializer(job_posting,context={"applicant_id":user.id,'user_role':user.role}).data,status=status.HTTP_200_OK)
     
     def create(self, request, *args, **kwargs):
-        try:
-            job_posting_serializer = JobPostingDetailSerializer(data={
-                'employer':request.user.id,
-                'job': request.data.get('job'),
-                'district': request.data.get('district'),
-                'descriptions': request.data.get('descriptions'),
-                'requirements': request.data.get('requirements'),
-                'salary':request.data.get('salary'),
-                'job_type': request.data.get('job_type'),
-                'quantity': request.data.get('quantity'),
-                'address': request.data.get('address')
-            })
-            job_posting_serializer.is_valid(raise_exception=True)
-            job_posting = job_posting_serializer.save()
-            return Response(JobPostingDetailSerializer(job_posting).data,status=status.HTTP_201_CREATED)
-        except Exception as ex:
-            return Response({"message":f"{str(ex)}"},status=status.HTTP_400_BAD_REQUEST)
+        job_posting_serializer = JobPostingDetailSerializer(data={
+            'employer':request.user.id,
+            'job': request.data.get('job'),
+            'district': request.data.get('district'),
+            'description': request.data.get('description'),
+            'requirements': request.data.get('requirements'),
+            'salary':request.data.get('salary'),
+            'job_type': request.data.get('job_type'),
+            'quantity': request.data.get('quantity'),
+            'address': request.data.get('address')
+        })
+        job_posting_serializer.is_valid(raise_exception=True)
+        job_posting = job_posting_serializer.save()
+        return Response(JobPostingDetailSerializer(job_posting).data,status=status.HTTP_201_CREATED)
+    
         
     def update(self, request, *args, **kwargs):
         job_posting =  self.get_object()
         for key in request.data:
-            if key in ['active']:
-                active = request.data.get("active")
-                if job_posting.apply_set.filter(active=True).exists() and active == None:
-                    return Response({'message':'không thể xóa vì đã có người apply'}, status=status.HTTP_400_BAD_REQUEST)
-                elif active != None:
-                    self.get_object().apply_set.filter(active=True).update(apply_status=ApplyStatus.CANCEL)
-            elif key in ['job','district ','descriptions','requirements','salary','job_type','quantity']:
-                    setattr(job_posting, key, request.data[key])
+            if key in ['job','district ','descriptions','requirements','salary','job_type','quantity']:
+                setattr(job_posting, key, request.data[key])
+                if hasattr(job_posting,'result'):
+                    job_posting.result.delete()
         return super().update(request, *args, **kwargs)
-        
+       
+    def destroy(self, request, *args, **kwargs):
+        job_posting =  self.get_object()
+        if job_posting.apply_set.filter(active=True).exists():
+            return Response({'message':'không thể xóa vì đã có người apply'}, status=status.HTTP_400_BAD_REQUEST)
+        return super().destroy(request, *args, **kwargs)
+    
     @action(methods=['get'],detail=True,url_path="applies")
     def get_cvs(self, request,pk):
         apply = Apply.objects.filter(job_posting=pk)
@@ -314,7 +334,9 @@ class CVViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView
         return [IsApplicantOwner()]
     
     def create(self, request, *args, **kwargs):
-        try:
+        user = request.user
+        cv_count = self.queryset.filter(applicant=user.id).count()
+        if cv_count < 10:
             cv_detail_serializer = CVDetailSerializer(data={
                 "name":request.data.get("name"),
                 "applicant":request.user.id,
@@ -323,8 +345,8 @@ class CVViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView
             cv_detail_serializer.is_valid(raise_exception=True)
             cv = cv_detail_serializer.save()
             return Response(CVDetailSerializer(cv).data, status=status.HTTP_201_CREATED)
-        except Exception as ex:
-            return Response({'message':f'{ex}'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"message":"đã đạt tối đa số lượng cv"}, status=status.HTTP_400_BAD_REQUEST)
     
     @action(methods=['get'], detail=True,url_path='applies')
     def set_apply(self,request,pk):
@@ -371,7 +393,6 @@ class ApplyMoreInfoViewSet(viewsets.ViewSet,generics.CreateAPIView):
         
         apply = request.data.get("apply")
         apply_status = request.data.get("apply_status")
-        print(apply_status)
         Apply.objects.filter(active=True, id=apply).update(apply_status=apply_status)
         apply_data_and_message = apply_data_and_message_serializer.save()
         

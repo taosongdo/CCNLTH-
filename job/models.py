@@ -111,7 +111,6 @@ class ApplyStatus(models.IntegerChoices):
     INTERVIEWING = 3
     PASSED = 4
     FAILED = 5
-    CANCEL = 6
     
 class Apply(BaseModel):
     cv = models.ForeignKey(CV, on_delete=models.CASCADE)

@@ -204,8 +204,8 @@ class JobPostingDetailSerializer(serializers.ModelSerializer):
         prefetch_related("apply").\
         values("id").\
         annotate(
-            seen_counting=Count("apply",Q(apply__apply_status__in=[ApplyStatus.PASSED,ApplyStatus.FAILED,ApplyStatus.INTERVIEWING,ApplyStatus.CANCEL,ApplyStatus.SEEN])),
-            reply_counting=Count("apply",Q(apply__apply_status__in=[ApplyStatus.PASSED,ApplyStatus.FAILED,ApplyStatus.INTERVIEWING,ApplyStatus.CANCEL])),
+            seen_counting=Count("apply",Q(apply__apply_status__in=[ApplyStatus.PASSED,ApplyStatus.FAILED,ApplyStatus.INTERVIEWING,ApplyStatus.SEEN])),
+            reply_counting=Count("apply",Q(apply__apply_status__in=[ApplyStatus.PASSED,ApplyStatus.FAILED,ApplyStatus.INTERVIEWING])),
             apply_counting=Count("apply"),
             pass_counting=Count("apply", Q(apply__apply_status=ApplyStatus.PASSED))
         ).\
