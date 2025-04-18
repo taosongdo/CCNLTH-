@@ -1,4 +1,4 @@
-from job.models import CV, Result, User,JobPosting, Apply,ApplyStatus,City,District,Phone,Experience,EducationLevel,Skill,JobSearchCriteria,JobType,UserRole,ResultStatus,ApplyDateAndMessage
+from job.models import CV, Result, User,JobPosting, Apply,ApplyStatus,City,District,Phone,Experience,EducationLevel,Skill,JobSearchCriteria,JobType,UserRole,ResultStatus,ApplyDateAndMessage,ChatGroup
 from rest_framework import serializers
 from django.db.models import Count, Q
 
@@ -235,7 +235,10 @@ class JobPostingDetailSerializer(serializers.ModelSerializer):
         model=JobPostingSerializer.Meta.model
         fields=JobPostingSerializer.Meta.fields+['description','requirements','job_type','address']
 
-
+class ChatGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatGroup
+        fields = ['applicant','employer']
 
 
     

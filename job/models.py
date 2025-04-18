@@ -122,7 +122,16 @@ class ApplyDateAndMessage(BaseModel):
     apply = models.OneToOneField(Apply, primary_key=True,on_delete = models.CASCADE)
     message = models.TextField()
     interviewing_date = models.DateTimeField(null=True,blank=True)
-    
+
+class ExpoPushToken(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    value = models.CharField(max_length=100)
+
+class ChatGroup(BaseModel):
+    applicant = models.ForeignKey(User, on_delete=models.CASCADE,related_name="applicant")
+    employer = models.ForeignKey(User, on_delete=models.CASCADE,related_name="employer")
+    class Meta:
+        unique_together = ('applicant', 'employer')
 
 
     

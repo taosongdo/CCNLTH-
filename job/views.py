@@ -23,8 +23,9 @@ from job.serializers import \
     ExperienceSerializer,\
     ExperienceDetailSerializer,\
     JobSearchCriteriaSerializer, \
-    ApplyDateAndMessageSerializer
-from job.models import CV, Apply, User, JobPosting, ResultStatus, UserRole,ApplyStatus,City,District,Skill,EducationLevel,Experience,Result,ApplyDateAndMessage
+    ApplyDateAndMessageSerializer, \
+    ChatGroupSerializer
+from job.models import CV, Apply, ExpoPushToken, User, JobPosting, ResultStatus, UserRole,ApplyStatus,City,District,Skill,EducationLevel,Experience,Result,ApplyDateAndMessage, ChatGroup
 from job.paginator import Paginator
 from rest_framework.response import Response
 from rest_framework import viewsets, generics, status, permissions
@@ -34,7 +35,8 @@ from django.contrib.auth import authenticate
 from oauth2_provider.views import TokenView
 import json
 
-from job.perms import IsApplicant,IsEmployer,IsAdmin, IsEmployerOwner, IsApplicantOwner, IsCVEmployerOrApplicantOwner, IsCVApplicantOwner, IsCVEmployerOwner
+from job.perms import IsApplicant,IsEmployer,IsAdmin, IsEmployerOwner, IsApplicantOwner, IsCVEmployerOrApplicantOwner, IsCVApplicantOwner, IsCVEmployerOwner, IsChatGroupAEOwner
+from job.firebase_configs import send_push_notification
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     queryset = User.objects.filter(is_active=True)
@@ -157,16 +159,16 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
 
         sort_by_date = request.query_params.get("sort_by_date")
         if sort_by_date:
-            queryset.order_by("created_date")
+            query = query.order_by("-created_date")
             
         sort_by_salary = request.query_params.get("sort_by_salary")
         if sort_by_salary:
-            queryset.order_by("salary")
+            query = query.order_by("-salary")
             
         sort_by_popularity = request.query_params.get("sort_by_popularity")
         if sort_by_popularity:
-            queryset.annotate(apply_count=Count("apply")).order_by("apply_count")
-            
+            query = query.annotate(apply_count=Count("apply")).order_by("-apply_count")
+        
         salary_max = request.query_params.get("salary_max")
         if salary_max:
             query = query.filter(salary__lt=float(salary_max))
@@ -321,7 +323,18 @@ class ResultViewSet(viewsets.ViewSet,generics.CreateAPIView):
         result_serializer.is_valid(raise_exception=True)
         result = result_serializer.save()
         return Response(ResultSerializer(result).data, status=status.HTTP_201_CREATED)
-             
+
+class ChatGroupViewSet(viewsets.ViewSet, generics.CreateAPIView):
+    queryset = ChatGroup
+    serializer_class = ChatGroupSerializer
+    def get_permissions(self):
+        if self.action.__eq__("create"):
+            return [IsEmployer()]
+        return [IsChatGroupAEOwner()]
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        user = request.user
+        
 
 class CVViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView,generics.RetrieveAPIView):
     queryset = CV.objects.filter(active=True)
@@ -428,6 +441,9 @@ class CustomTokenView(TokenView):
         response = super().post(request, *args, **kwargs)
         data = json.loads(response.content) 
         user = authenticate(username=request.POST.get("username"),password=request.POST.get("password"))
+        expo_push_token = ExpoPushToken.objects.get_or_create(value=request.POST.get("expo_token"),user=user)
+        print(expo_push_token)
+        send_push_notification(expo_push_token[0].value,"thông báo","đã đăng nhập")
         if user == None:
             return response
         data['role'] = user.role
