@@ -4,8 +4,12 @@ import IndexPage from '../components/Home/IndexPage';
 import PersonalPage from '../components/User/PersonalPage';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Styles from '../Styles';
+import ChatList from '../components/Chat/ChatList';
+import { useContext } from 'react';
+import { userContext } from '../App';
 const TabNavigator = () => {
     const Tab = createBottomTabNavigator()
+    const { token } = useContext(userContext)
     return (
         <Tab.Navigator
             screenOptions={{
@@ -15,16 +19,30 @@ const TabNavigator = () => {
                 tabBarStyle: [Styles.bgColorBFDBFE, Styles.h60]
             }}
         >
+
             <Tab.Screen
                 name="IndexPage"
                 component={IndexPage}
                 options={{
-                    tabBarLabel: "trang chủ",
+                    tabBarLabel: "trang chat",
                     tabBarIcon: ({ color, size }) => {
                         return <FontAwesome name={"home"} size={size} color={color} />;
                     },
                 }}
             />
+            {
+                token &&
+                <Tab.Screen
+                    name="ChatList"
+                    component={ChatList}
+                    options={{
+                        tabBarLabel: "trang cá nhân",
+                        tabBarIcon: ({ color, size }) => {
+                            return <FontAwesome6 name={"user"} size={size} color={color} />;
+                        },
+                    }}
+                />
+            }
             <Tab.Screen
                 name="PersonalPage"
                 component={PersonalPage}

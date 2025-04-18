@@ -20,10 +20,18 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.taosongdo.jobApp"
+      "package": "com.taosongdo.jobApp",
+      "googleServicesFile": "./google-services.json",
+      "useNextNotificationsApi": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "0664fa3f-34a6-48f0-b3eb-0acfb17ea0f3"
+      }
+    },
+    "owner": "taosongdo"
   }
 }

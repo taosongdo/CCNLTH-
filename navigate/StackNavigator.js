@@ -13,7 +13,8 @@ import { userContext } from "../App";
 import JobPage from "../components/Job/JobPage";
 import IndexPage from "../components/Home/IndexPage";
 import CVSelectPage from "../components/Job/CVSelectPage";
-import JobCreatorPage from "../components/Job/JobCreatorPage";
+import ChatScreen from "../components/Chat/ChatSreen.js";
+
 const StackNavigator = () => {
     const Stack = createStackNavigator()
     const { token, role } = useContext(userContext)

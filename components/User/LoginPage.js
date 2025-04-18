@@ -10,6 +10,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from "@react-navigation/native";
 import Styles from "../../Styles"
 import Apis, { endpoints } from '../../config/Apis'
+import Notification from "../Notification/Notification"
 
 const LoginPage = ({ navigation }) => {
     const navigationHook = useNavigation();
@@ -39,7 +40,7 @@ const LoginPage = ({ navigation }) => {
     const [openUserRole, setOpenUserRole] = useState(false)
     const [userRoleValue, setUserRoleValue] = useState(null)
 
-    const { setToken, setRole } = useContext(userContext)
+    const { setToken, setRole, expoToken } = useContext(userContext)
 
     const login = async () => {
         try {
@@ -49,6 +50,7 @@ const LoginPage = ({ navigation }) => {
             formData.append("password", password)
             formData.append("client_id", key.CLIENT_ID)
             formData.append("client_secret", key.CLIENT_SECRET)
+            formData.append("expo_token", expoToken)
             setLoading(true)
             const res = await Apis.post(`/o/token/`, formData, {
                 headers: {
@@ -156,88 +158,91 @@ const LoginPage = ({ navigation }) => {
         return <LoadPage />
     }
     return (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={[Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.flex1, Styles.bgColorBFDBFE]}>
-                <View style={[styles.formLogin, Styles.borderRadius20, Styles.alignItemsCenter, Styles.bgColorF8FAFC, Styles.p10]}>
-                    {!checkLogin &&
-                        <>
-                            <View style={[Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.w100per, Styles.p10]}>
-                                <Image style={[Styles.w150, Styles.borderRadius100, Styles.h150]} source={{ uri: avatar ? avatar : "https://res.cloudinary.com/dx6brcofe/image/upload/v1736245841/woxspsofipalpoz8r4aj.jpg" }} />
-                            </View>
-                            <TouchButton title="chọn ảnh" backgroundColor={"red"} pressHandler={pickImage} />
-                        </>
-                    }
-                    <View style={[Styles.w100per, Styles.marginBottom10]}>
-                        <InputBar value={username} TextChangeHandler={setUsername} placeholder={"tài khoản"} />
+        <>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={[Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.flex1, Styles.bgColorBFDBFE]}>
+                    <View style={[styles.formLogin, Styles.borderRadius20, Styles.alignItemsCenter, Styles.bgColorF8FAFC, Styles.p10]}>
+                        {!checkLogin &&
+                            <>
+                                <View style={[Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.w100per, Styles.p10]}>
+                                    <Image style={[Styles.w150, Styles.borderRadius100, Styles.h150]} source={{ uri: avatar ? avatar : "https://res.cloudinary.com/dx6brcofe/image/upload/v1736245841/woxspsofipalpoz8r4aj.jpg" }} />
+                                </View>
+                                <TouchButton title="chọn ảnh" backgroundColor={"red"} pressHandler={pickImage} />
+                            </>
+                        }
+                        <View style={[Styles.w100per, Styles.marginBottom10]}>
+                            <InputBar value={username} TextChangeHandler={setUsername} placeholder={"tài khoản"} />
+                        </View>
+                        <View style={[Styles.w100per, Styles.marginBottom10]}>
+                            <InputBar value={password} TextChangeHandler={setPassword} placeholder={"mật khẩu"} secureTextEntry={true} />
+                        </View>
+
+                        {checkLogin ?
+                            <>
+                                <View style={Styles.w150}>
+                                    <TouchButton title="đăng nhập" backgroundColor={"blue"} pressHandler={login} />
+                                </View>
+                                <View style={[styles.line, Styles.w100per]} />
+                                <Text style={[Styles.marginBottom10]}>chưa có tài khoản ?</Text>
+                                <View style={Styles.w150}>
+                                    <TouchButton title="đăng ký" backgroundColor={"green"} pressHandler={checkLoginHandler} />
+                                </View>
+                            </> :
+                            <>
+                                {password !== passwordReenter && <Text style={[{ color: "red" }, Styles.marginBottom10]}>mật khẩu và xác nhận ko giống nhau</Text>}
+                                <View style={[Styles.w100per, Styles.marginBottom10]}>
+                                    <InputBar value={passwordReenter} TextChangeHandler={setPasswordReenter} placeholder={"nhập lại mật khẩu"} secureTextEntry={true} />
+                                </View>
+                                <View style={[Styles.w100per, Styles.marginBottom10]}>
+                                    <InputBar value={gmail} TextChangeHandler={setGmail} placeholder={"gmail"} keyboardType={"email-address"} />
+                                </View>
+                                <View style={[Styles.flexDirectionRow, Styles.justifyContentBetween, Styles.w100per]}>
+                                    <View style={Styles.w30per}>
+                                        <InputBar value={firstName} TextChangeHandler={setFirstName} placeholder={"tên"} />
+                                    </View>
+                                    <View style={Styles.w30per}>
+                                        <InputBar value={lastName} TextChangeHandler={setLastName} placeholder={"họ và tên lót"} />
+                                    </View>
+                                    <View style={Styles.w30per}>
+                                        <TouchButton title={gender ? "nam" : "nữ"} backgroundColor={gender ? "lightblue" : "pink"} pressHandler={() => { setGender(!gender) }} />
+                                    </View>
+                                </View>
+                                <Text style={Styles.marginBottom10}>
+                                    số điện thoại 2 là tùy chọn
+                                </Text>
+                                <View style={[Styles.flexDirectionRow, Styles.w100per, Styles.justifyContentBetween, Styles.marginBottom10]}>
+                                    <View style={Styles.w48per}>
+                                        <InputBar value={phoneNumber1} TextChangeHandler={setPhoneNumber1} keyboardType="numeric" placeholder={"số điện thoại 1"} />
+                                    </View>
+                                    <View style={Styles.w48per}>
+                                        <InputBar value={phoneNumber2} TextChangeHandler={setPhoneNumber2} keyboardType="numeric" placeholder={"số điện thoại 2"} />
+                                    </View>
+                                </View>
+                                <DropDownPicker
+                                    style={[styles.list, Styles.marginBottom10, Styles.borderRadius10, Styles.bgColorF8FAFC, styles.districtList]}
+
+                                    open={openUserRole}
+                                    setOpen={setOpenUserRole}
+
+                                    value={userRoleValue}
+                                    setValue={setUserRoleValue}
+
+                                    items={userRoleList}
+
+                                    placeholder="người ứng tuyển"
+
+                                />
+                                <TouchButton title="đăng ký" pressHandler={register} />
+                                <View style={[styles.line, Styles.w100per]} />
+                                <Text style={Styles.marginBottom10}>đã có tài khoản ?</Text>
+                                <TouchButton title="đăng nhập" pressHandler={checkLoginHandler} />
+                            </>
+                        }
                     </View>
-                    <View style={[Styles.w100per, Styles.marginBottom10]}>
-                        <InputBar value={password} TextChangeHandler={setPassword} placeholder={"mật khẩu"} secureTextEntry={true} />
-                    </View>
-
-                    {checkLogin ?
-                        <>
-                            <View style={Styles.w150}>
-                                <TouchButton title="đăng nhập" backgroundColor={"blue"} pressHandler={login} />
-                            </View>
-                            <View style={[styles.line, Styles.w100per]} />
-                            <Text style={[Styles.marginBottom10]}>chưa có tài khoản ?</Text>
-                            <View style={Styles.w150}>
-                                <TouchButton title="đăng ký" backgroundColor={"green"} pressHandler={checkLoginHandler} />
-                            </View>
-                        </> :
-                        <>
-                            {password !== passwordReenter && <Text style={[{ color: "red" }, Styles.marginBottom10]}>mật khẩu và xác nhận ko giống nhau</Text>}
-                            <View style={[Styles.w100per, Styles.marginBottom10]}>
-                                <InputBar value={passwordReenter} TextChangeHandler={setPasswordReenter} placeholder={"nhập lại mật khẩu"} secureTextEntry={true} />
-                            </View>
-                            <View style={[Styles.w100per, Styles.marginBottom10]}>
-                                <InputBar value={gmail} TextChangeHandler={setGmail} placeholder={"gmail"} keyboardType={"email-address"} />
-                            </View>
-                            <View style={[Styles.flexDirectionRow, Styles.justifyContentBetween, Styles.w100per]}>
-                                <View style={Styles.w30per}>
-                                    <InputBar value={firstName} TextChangeHandler={setFirstName} placeholder={"tên"} />
-                                </View>
-                                <View style={Styles.w30per}>
-                                    <InputBar value={lastName} TextChangeHandler={setLastName} placeholder={"họ và tên lót"} />
-                                </View>
-                                <View style={Styles.w30per}>
-                                    <TouchButton title={gender ? "nam" : "nữ"} backgroundColor={gender ? "lightblue" : "pink"} pressHandler={() => { setGender(!gender) }} />
-                                </View>
-                            </View>
-                            <Text style={Styles.marginBottom10}>
-                                số điện thoại 2 là tùy chọn
-                            </Text>
-                            <View style={[Styles.flexDirectionRow, Styles.w100per, Styles.justifyContentBetween, Styles.marginBottom10]}>
-                                <View style={Styles.w48per}>
-                                    <InputBar value={phoneNumber1} TextChangeHandler={setPhoneNumber1} keyboardType="numeric" placeholder={"số điện thoại 1"} />
-                                </View>
-                                <View style={Styles.w48per}>
-                                    <InputBar value={phoneNumber2} TextChangeHandler={setPhoneNumber2} keyboardType="numeric" placeholder={"số điện thoại 2"} />
-                                </View>
-                            </View>
-                            <DropDownPicker
-                                style={[styles.list, Styles.marginBottom10, Styles.borderRadius10, Styles.bgColorF8FAFC, styles.districtList]}
-
-                                open={openUserRole}
-                                setOpen={setOpenUserRole}
-
-                                value={userRoleValue}
-                                setValue={setUserRoleValue}
-
-                                items={userRoleList}
-
-                                placeholder="người ứng tuyển"
-
-                            />
-                            <TouchButton title="đăng ký" backgroundColor={"green"} pressHandler={register} />
-                            <View style={[styles.line, Styles.w100per]} />
-                            <Text style={Styles.marginBottom10}>đã có tài khoản ?</Text>
-                            <TouchButton title="đăng nhập" backgroundColor={"blue"} pressHandler={checkLoginHandler} />
-                        </>
-                    }
                 </View>
-            </View>
-        </TouchableWithoutFeedback>)
+            </TouchableWithoutFeedback>
+        </>
+    )
 }
 export default LoginPage
 
