@@ -3,6 +3,7 @@ from django.db.models import Count
 from django.forms import ValidationError
 from django.http import HttpResponse
 from job.serializers import \
+    ApplyChatSerializer,\
     ApplySerializer,  \
     ApplyDetailSerializer, \
     UserDetailSerializer, \
@@ -23,9 +24,8 @@ from job.serializers import \
     ExperienceSerializer,\
     ExperienceDetailSerializer,\
     JobSearchCriteriaSerializer, \
-    ApplyDateAndMessageSerializer, \
-    ChatGroupSerializer
-from job.models import CV, Apply, ExpoPushToken, User, JobPosting, ResultStatus, UserRole,ApplyStatus,City,District,Skill,EducationLevel,Experience,Result,ApplyDateAndMessage, ChatGroup
+    ApplyDateAndMessageSerializer
+from job.models import CV, Apply, ExpoPushToken, User, JobPosting, ResultStatus, UserRole,ApplyStatus,City,District,Skill,EducationLevel,Experience,Result,ApplyDateAndMessage
 from job.paginator import Paginator
 from rest_framework.response import Response
 from rest_framework import viewsets, generics, status, permissions
@@ -35,8 +35,9 @@ from django.contrib.auth import authenticate
 from oauth2_provider.views import TokenView
 import json
 
-from job.perms import IsApplicant,IsEmployer,IsAdmin, IsEmployerOwner, IsApplicantOwner, IsCVEmployerOrApplicantOwner, IsCVApplicantOwner, IsCVEmployerOwner, IsChatGroupAEOwner
-from job.firebase_configs import send_push_notification
+from job.perms import IsApplicant,IsEmployer,IsAdmin, IsEmployerOwner, IsApplicantOwner, IsCVEmployerOrApplicantOwner, IsCVApplicantOwner, IsCVEmployerOwner
+from job.expo_notification_configs import send_push_notification
+from job.timer import set_up_alert
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     queryset = User.objects.filter(is_active=True)
@@ -45,33 +46,37 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     
     def create(self, request, *args, **kwargs):
         data = request.data
-        user_serializer = UserDetailSerializer(data=data)
-        user_serializer.is_valid(raise_exception=True)
-        user = user_serializer.save()
-        try:
-            phone_number_1 = data['phone_number_1']
-            phone_number_1_serializer = PhoneSerializer(data={
-                'user':user.id,
-                'value':phone_number_1
-            })
-            phone_number_1_serializer.is_valid(raise_exception=True)
-           
-
-            if 'phone_number_2' in data:
-                phone_number_2=data['phone_number_2']
-                phone_number_2_serializer = PhoneSerializer(data={
+        if data.get('password') == data.get('password_reenter'):
+            user_serializer = UserDetailSerializer(data = data)
+                
+            user_serializer.is_valid(raise_exception=True)
+            user = user_serializer.save()
+            try:
+                phone_number_1 = data['phone_number_1']
+                phone_number_1_serializer = PhoneSerializer(data={
                     'user':user.id,
-                    'value':phone_number_2
+                    'value':phone_number_1
                 })
-                phone_number_2_serializer.is_valid(raise_exception=True)
-                phone_number_2 = phone_number_2_serializer.save()
-            phone_number_1 = phone_number_1_serializer.save()
-            return Response(UserDetailSerializer(user).data,status=status.HTTP_201_CREATED)
-        except Exception as ex:
-            if user:
-                user.delete()
-            return Response({"message":f"{ex}"},status=status.HTTP_400_BAD_REQUEST)
-    
+                phone_number_1_serializer.is_valid(raise_exception=True)
+            
+
+                if 'phone_number_2' in data:
+                    phone_number_2=data['phone_number_2']
+                    phone_number_2_serializer = PhoneSerializer(data={
+                        'user':user.id,
+                        'value':phone_number_2
+                    })
+                    phone_number_2_serializer.is_valid(raise_exception=True)
+                    phone_number_2 = phone_number_2_serializer.save()
+                phone_number_1 = phone_number_1_serializer.save()
+                return Response(UserDetailSerializer(user).data,status=status.HTTP_201_CREATED)
+            except Exception as ex:
+                if user:
+                    user.delete()
+                return Response({"message":f"{ex}"},status=status.HTTP_400_BAD_REQUEST)
+        else:
+             return Response({"message":"xác nhận và mật khẩu không giống nhau"},status=status.HTTP_400_BAD_REQUEST)
+        
  
     
     @action(methods=['get','patch'],detail=False,url_path='current-user',permission_classes=[permissions.IsAuthenticated])
@@ -187,14 +192,18 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
             
         paginator = Paginator()
         page = paginator.paginate_queryset(query, request)
-        
         return paginator.get_paginated_response(JobPostingSerializer(page,many=True,context={'user_role': user.role if hasattr(user, 'role') else None}).data)
     
     @action(methods=['get'],detail=False,url_path='cvs')
     def get_cvs(self, request):
         cvs = CV.objects.filter(active=True).filter(applicant_id=request.user.id)
         return Response(CVSerializer(cvs,many=True).data, status=status.HTTP_200_OK)
-
+    
+    @action(methods=['get'],detail=False,url_path='chat')
+    def get_cvs(self, request):
+        user = request.user 
+        return Response(ApplyChatSerializer(user).data, status=status.HTTP_200_OK)
+    
 class EducationLevelViewSet(viewsets.ViewSet,generics.CreateAPIView,generics.RetrieveAPIView,generics.UpdateAPIView,generics.DestroyAPIView):
     queryset = EducationLevel.objects.filter(active=True)
     serializer_class = EducationLevelDetailSerializer
@@ -302,10 +311,12 @@ class JobPostingViewSet(viewsets.ViewSet, generics.CreateAPIView,generics.Retrie
             return Response({'message':'không thể xóa vì đã có người apply'}, status=status.HTTP_400_BAD_REQUEST)
         return super().destroy(request, *args, **kwargs)
     
-    @action(methods=['get'],detail=True,url_path="applies")
-    def get_cvs(self, request,pk):
-        apply = Apply.objects.filter(job_posting=pk)
-        return Response(ApplySerializer(apply, many=True).data, status=status.HTTP_200_OK)
+        
+    @action(methods=['get'], detail=True,url_path='applies')
+    def set_apply(self,request,pk):
+        applies = self.get_object().apply_set     
+        return Response(ApplySerializer(applies, many=True).data,status=status.HTTP_200_OK)
+    
     
 
 class ResultViewSet(viewsets.ViewSet,generics.CreateAPIView):
@@ -323,18 +334,7 @@ class ResultViewSet(viewsets.ViewSet,generics.CreateAPIView):
         result_serializer.is_valid(raise_exception=True)
         result = result_serializer.save()
         return Response(ResultSerializer(result).data, status=status.HTTP_201_CREATED)
-
-class ChatGroupViewSet(viewsets.ViewSet, generics.CreateAPIView):
-    queryset = ChatGroup
-    serializer_class = ChatGroupSerializer
-    def get_permissions(self):
-        if self.action.__eq__("create"):
-            return [IsEmployer()]
-        return [IsChatGroupAEOwner()]
-    def create(self, request, *args, **kwargs):
-        data = request.data
-        user = request.user
-        
+  
 
 class CVViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView,generics.RetrieveAPIView):
     queryset = CV.objects.filter(active=True)
@@ -360,12 +360,7 @@ class CVViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView
             return Response(CVDetailSerializer(cv).data, status=status.HTTP_201_CREATED)
         else:
             return Response({"message":"đã đạt tối đa số lượng cv"}, status=status.HTTP_400_BAD_REQUEST)
-    
-    @action(methods=['get'], detail=True,url_path='applies')
-    def set_apply(self,request,pk):
-        applies = self.get_object().apply_set
-        return Response(ApplySerializer(applies).data,status=status.HTTP_200_OK)
-    
+
 
 class ApplyViewSet(viewsets.ViewSet,generics.RetrieveAPIView,generics.CreateAPIView ,generics.UpdateAPIView,generics.DestroyAPIView):
     queryset = Apply.objects.filter(active=True)
@@ -401,15 +396,17 @@ class ApplyMoreInfoViewSet(viewsets.ViewSet,generics.CreateAPIView):
     permission_classes=[IsCVEmployerOwner]
     
     def create(self, request, *args, **kwargs):
+        user = request.user
         apply_data_and_message_serializer = ApplyDateAndMessageSerializer(data=request.data)
         apply_data_and_message_serializer.is_valid(raise_exception=True)
         
-        apply = request.data.get("apply")
+      
         apply_status = request.data.get("apply_status")
-        Apply.objects.filter(active=True, id=apply).update(apply_status=apply_status)
+        apply = Apply.objects.filter(active=True, id=request.data.get("apply"))
+        apply.update(apply_status=apply_status)
         apply_data_and_message = apply_data_and_message_serializer.save()
-        
-    
+        set_up_alert(apply[0].cv.applicant.id, request.data.get("interviewing_date"), apply[0].job_posting.job)
+        set_up_alert(apply[0].job_posting.employer.id,  request.data.get("interviewing_date"), apply[0].job_posting.job)
         return Response(ApplyDateAndMessageSerializer(apply_data_and_message,context={"apply_status":apply_status}).data,status=status.HTTP_201_CREATED)
 
     
@@ -442,8 +439,8 @@ class CustomTokenView(TokenView):
         data = json.loads(response.content) 
         user = authenticate(username=request.POST.get("username"),password=request.POST.get("password"))
         expo_push_token = ExpoPushToken.objects.get_or_create(value=request.POST.get("expo_token"),user=user)
-        print(expo_push_token)
-        send_push_notification(expo_push_token[0].value,"thông báo","đã đăng nhập")
+        if expo_push_token:
+            send_push_notification(expo_push_token[0].value,"thông báo","đã đăng nhập")
         if user == None:
             return response
         data['role'] = user.role

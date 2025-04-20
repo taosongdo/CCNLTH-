@@ -1,6 +1,7 @@
-from job.models import CV, Result, User,JobPosting, Apply,ApplyStatus,City,District,Phone,Experience,EducationLevel,Skill,JobSearchCriteria,JobType,UserRole,ResultStatus,ApplyDateAndMessage,ChatGroup
+from django.forms import ValidationError
+from job.models import CV, Result, User,JobPosting, Apply,ApplyStatus,City,District,Phone,Experience,EducationLevel,Skill,JobSearchCriteria,JobType,UserRole,ResultStatus,ApplyDateAndMessage
 from rest_framework import serializers
-from django.db.models import Count, Q
+from django.db.models import Count, Q, F
 
 
 
@@ -161,6 +162,47 @@ class JobPostingSerializer(serializers.ModelSerializer):
         model=JobPosting
         fields=['id','employer','job','district','salary','quantity']
 
+class ApplyChatSerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.role == 1:
+            user_list = User.objects.select_related("cv__apply__job_posting__employer")\
+            .filter(cv__apply__isnull=False)\
+            .annotate(
+                apply_id = F("cv__apply__id"),
+                employer_id = F("cv__apply__job_posting__employer__id"),
+                employer_first_name = F("cv__apply__job_posting__employer__first_name"),
+                employer_last_name = F("cv__apply__job_posting__employer__last_name"),
+                employer_avatar = F("cv__apply__job_posting__employer__avatar")
+            )\
+            .values(
+                'apply_id',
+                'employer_id',
+                'employer_first_name',
+                'employer_last_name',
+                'employer_avatar'
+            ).filter(id=instance.id)
+            for user in user_list:
+                user['employer_avatar'] = user['employer_avatar'].url
+            data["chat_list"] = user_list
+        else:
+            user_list = User.objects.select_related("job_posting__apply__cv__applicant")\
+            .filter(cv__apply__isnull=False) .annotate(
+                apply_id = F("job_posting__apply__id"),
+                applicant_id =F("job_posting__apply__cv__applicant__id"),
+                applicant_first_name = F("job_posting__apply__cv__applicant__first_name"),
+                applicant_last_name = F("job_posting__apply__cv__applicant__last_name"),
+                applicant_avatar = F("job_posting__apply__cv__applicant__avatar"),
+            ).values('apply_id','employer_id','applicant_first_name','applicant_last_name','applicant_avatar').\
+            filter(id=instance.id)
+            for user in user_list:
+                user['applicant_avatar'] = user['applicant_avatar'].url
+            data["chat_list"] = user_list        
+        return data
+    class Meta:
+        model=User
+        fields=['id']
+        
 class ApplySerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data =  super().to_representation(instance)
@@ -168,6 +210,7 @@ class ApplySerializer(serializers.ModelSerializer):
         cv = instance.cv
         data['cv_name'] = cv.name
         data['cv_id'] = cv.id 
+        
         return data
     class Meta:
         model=Apply
@@ -235,10 +278,6 @@ class JobPostingDetailSerializer(serializers.ModelSerializer):
         model=JobPostingSerializer.Meta.model
         fields=JobPostingSerializer.Meta.fields+['description','requirements','job_type','address']
 
-class ChatGroupSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ChatGroup
-        fields = ['applicant','employer']
 
 
     

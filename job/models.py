@@ -26,7 +26,7 @@ class District(BaseModel):
     city = models.ForeignKey(City, on_delete=models.CASCADE)
     
 class User(AbstractUser):
-    avatar = CloudinaryField(default=settings.DEFAULT_AVATAR_URL)
+    avatar = CloudinaryField()
     role = models.IntegerField(choices=UserRole.choices,default=UserRole.APPLICANT)
     gender = models.BooleanField(default=True)
     email = models.EmailField(unique=True, blank=False, null=False)
@@ -126,12 +126,6 @@ class ApplyDateAndMessage(BaseModel):
 class ExpoPushToken(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     value = models.CharField(max_length=100)
-
-class ChatGroup(BaseModel):
-    applicant = models.ForeignKey(User, on_delete=models.CASCADE,related_name="applicant")
-    employer = models.ForeignKey(User, on_delete=models.CASCADE,related_name="employer")
-    class Meta:
-        unique_together = ('applicant', 'employer')
 
 
     

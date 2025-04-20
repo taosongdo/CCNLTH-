@@ -34,7 +34,3 @@ class IsCVEmployerOwner(IsEmployer):
     def has_object_permission(self, request, view, obj):
         return super().has_permission(request,view) and obj.job_posting.employer == request.user 
 
-class IsChatGroupAEOwner(permissions.IsAuthenticated):
-    def has_object_permission(self, request, view, obj):
-         return super().has_permission(request,view) and (obj.applicant == request.user and obj.employer == request.user) 
-

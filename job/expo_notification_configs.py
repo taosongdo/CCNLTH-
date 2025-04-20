@@ -18,5 +18,3 @@ def send_push_notification(expo_push_token, title, body):
         },
         data=json.dumps(message)
     )
-
-    print('Gửi thành công:', response.json())
