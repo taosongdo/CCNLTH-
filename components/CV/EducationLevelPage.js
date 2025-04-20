@@ -1,7 +1,7 @@
-import { StyleSheet, View, TouchableWithoutFeedback, Keyboard, Alert } from "react-native"
+import { View, TouchableWithoutFeedback, Keyboard, Alert } from "react-native"
 import ScrollList from "../ScrollList"
 import { useContext, useEffect, useState } from "react"
-import { userContext } from "../../App"
+import { UserContext } from "../../config/AppContext"
 import InputBar from "../InputBar"
 import TouchButton from "../TouchButton"
 import LoadPage from "../LoadPage"
@@ -10,7 +10,7 @@ import Apis, { endpoints } from "../../config/Apis"
 
 
 const EducationLevelPage = () => {
-    const { token } = useContext(userContext)
+    const { access_token } = useContext(UserContext)
     const [eduactionLevelList, setEduactionLevelList] = useState()
     const [schoolName, setSchoolName] = useState()
     const [mature, setMature] = useState()
@@ -30,7 +30,7 @@ const EducationLevelPage = () => {
         try {
             const res = await Apis.get(endpoints['education-levels'], {
                 headers: {
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${access_token}`
                 }
             })
             setEduactionLevelList(res.data)
@@ -43,9 +43,9 @@ const EducationLevelPage = () => {
     }
     const itemPressHandler = async (params) => {
         try {
-            const res = await Apis.get(endpoints['education-levels-detail'](params.id),{
-                headers:{
-                    Authorization: `Bearer ${token}`
+            const res = await Apis.get(endpoints['education-levels-detail'](params.id), {
+                headers: {
+                    Authorization: `Bearer ${access_token}`
                 }
             })
             setSchoolName(res.data.school_name)
@@ -81,7 +81,7 @@ const EducationLevelPage = () => {
                     description: description
                 }, {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${access_token}`
                     }
                 })
                 setEduactionLevelList(replaceItem(eduactionLevelList, 'id', res.data.id, res.data))
@@ -101,7 +101,7 @@ const EducationLevelPage = () => {
                     certificate: certificate
                 }, {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${access_token}`
                     }
                 })
                 setEduactionLevelList([res.data, ...eduactionLevelList])
@@ -124,7 +124,7 @@ const EducationLevelPage = () => {
                             try {
                                 await Apis.delete(endpoints['education-levels-detail'](id), {
                                     headers: {
-                                        Authorization: `Bearer ${token}`
+                                        Authorization: `Bearer ${access_token}`
                                     }
                                 })
                                 setEduactionLevelList(deleteItem(eduactionLevelList, 'id', id))

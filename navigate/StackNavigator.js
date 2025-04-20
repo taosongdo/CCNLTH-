@@ -9,15 +9,15 @@ import EducationLevelPage from "../components/CV/EducationLevelPage";
 import JobSearchCriteria from "../components/CV/JobSearchCriteriaPage";
 import CVSkillPage from "../components/CV/CVSkillPage";
 import { useContext } from "react";
-import { userContext } from "../App";
+import { UserContext } from "../config/AppContext.js";
 import JobPage from "../components/Job/JobPage";
 import IndexPage from "../components/Home/IndexPage";
 import CVSelectPage from "../components/Job/CVSelectPage";
-import ChatScreen from "../components/Chat/ChatSreen.js";
+
 
 const StackNavigator = () => {
     const Stack = createStackNavigator()
-    const { token, role } = useContext(userContext)
+    const { access_token, role } = useContext(UserContext)
     return (
         <NavigationContainer>
             <Stack.Navigator>
@@ -35,7 +35,7 @@ const StackNavigator = () => {
                     name="trang công việc"
                     component={JobPage}
                 />
-                {token &&
+                {access_token &&
                     <>
                         <Stack.Screen
                             name="trang chọn CV"

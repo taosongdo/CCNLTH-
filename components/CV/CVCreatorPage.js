@@ -22,25 +22,41 @@ const CVCreatingPage = ({ navigation }) => {
     const skillViewPressHandler = () => {
         navigation.navigate("trang kĩ năng")
     }
+    const itemList = [
+        {
+            title: "thêm tiêu chí làm việc",
+            pressHandler: criteriaViewPressHandler
+        },
+        {
+            title: "thêm học vấn",
+            pressHandler: educationViewPressHandler
+        },
+        {
+            title: "thêm kinh nghiệm làm việc",
+            pressHandler: experienceViewPressHandler
+        },
+        {
+            title: "thêm kỹ năng",
+            pressHandler: skillViewPressHandler
+        },
+        {
+            title: "xem và tạo CV",
+            pressHandler: cvViewPressHandler
+        }
+    ]
 
     return (
         <View style={[styles.pageView, Styles.flex1]}>
-            <View style={Styles.p10}>
-                <TouchButton title="thêm tiêu chí làm việc" backgroundColor={"blue"} pressHandler={criteriaViewPressHandler} />
-            </View>
-            <View style={Styles.p10}>
-                <TouchButton title="thêm học vấn" backgroundColor={"blue"} pressHandler={educationViewPressHandler} />
-            </View>
-            <View style={Styles.p10}>
-                <TouchButton title="thêm kinh nghiệm làm việc" backgroundColor={"blue"} pressHandler={experienceViewPressHandler} />
-            </View>
-            <View style={Styles.p10}>
-                <TouchButton title="thêm kỹ năng" backgroundColor={"blue"} pressHandler={skillViewPressHandler} />
-            </View>
-            <View style={Styles.p10}>
-                <TouchButton title="xem và tạo CV" backgroundColor={"blue"} pressHandler={cvViewPressHandler} />
-            </View>
-        </View>
+            {
+                itemList.map((item) => {
+                    return (
+                        <View style={Styles.p10}>
+                            <TouchButton title={item.title} pressHandler={item.pressHandler} />
+                        </View>
+                    )
+                })
+            }
+        </View >
     )
 }
 export default CVCreatingPage

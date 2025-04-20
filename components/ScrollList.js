@@ -12,7 +12,7 @@ const ScrollList = (props) => {
         return paramsObject
     }
     return (
-        <View style={Styles.marginBottom10}>
+        <View style={[Styles.flex1]}>
             <View style={[styles.viewCVTitle, Styles.flexDirectionRow, Styles.justifyContentCenter, Styles.bgColorBFDBFE, Styles.h60]}>
                 <Text style={[styles.textCVTitle, Styles.verticalAlignMiddle, Styles.textAlignCenter, Styles.flex1]}>
                     {props.listName}
@@ -36,7 +36,7 @@ const ScrollList = (props) => {
                 contentContainerStyle={Styles.p10}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <View style={Styles.flexDirectionRow}>
+                    <View style={[Styles.flexDirectionRow]}>
                         <View style={Styles.flex1}>
                             <TouchButton title={`${props.contentKeys.map((contentKey) => { return item[contentKey] }).join(" - ")}`} params={paramsParser(item, props.keyItems)} backgroundColor={"blue"} pressHandler={props.itemPressHandler} />
                         </View>

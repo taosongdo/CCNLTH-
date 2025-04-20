@@ -21,7 +21,6 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.taosongdo.jobApp",
-      "googleServicesFile": "./google-services.json",
       "useNextNotificationsApi": true
     },
     "web": {

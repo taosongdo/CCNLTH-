@@ -1,8 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { View, Alert } from "react-native";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import React from "react";
+import { ExpoPushTokenContext, ExpoPushTokenDispatchContext } from "../../config/AppContext";
+
 async function registerForPushNotificationsAsync() {
     let token;
     if (Device.isDevice) {
@@ -37,10 +39,11 @@ Notifications.setNotificationHandler({
 const Notification = (props) => {
     const notificationListener = useRef(null);
     const responseListener = useRef(null);
-
+    const dispatchExpoPushToken = useContext(ExpoPushTokenDispatchContext)
+    const dispatchExpoToken = useContext(ExpoPushTokenContext)
     useEffect(() => {
         registerForPushNotificationsAsync().then((token) => {
-            props.setExpoToken(token);
+            dispatchExpoPushToken({ type: "create", payload: token });
         }).catch((err) => { alert(err) })
 
 
@@ -55,7 +58,7 @@ const Notification = (props) => {
                 Notifications.removeNotificationSubscription(responseListener.current);
             }
         }
-    });
+    }, []);
     return (
         <View>
         </View>

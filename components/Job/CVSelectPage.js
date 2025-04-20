@@ -2,13 +2,13 @@ import { useContext, useEffect, useState } from "react"
 import ScrollList from "../ScrollList"
 import { useRoute } from '@react-navigation/native';
 import Apis, { endpoints } from "../../config/Apis"
-import { userContext } from "../../App"
+import { UserContext } from "../../config/AppContext";
 
 
 const CVSelectPage = ({ navigation }) => {
     const route = useRoute();
     const paramsRoute = route.params
-    const { token } = useContext(userContext)
+    const { access_token } = useContext(UserContext)
     const [list, setList] = useState()
     const itemPressHandler = async (params) => {
         try {
@@ -18,7 +18,7 @@ const CVSelectPage = ({ navigation }) => {
                     job_posting: paramsRoute.jobPosting,
                 }, {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${access_token}`
                     }
                 })
                 paramsRoute.setCVId(res.data.cv)
@@ -40,7 +40,7 @@ const CVSelectPage = ({ navigation }) => {
         try {
             const res = await Apis.get(`${paramsRoute.owner ? endpoints['applies'](paramsRoute.jobPosting) : endpoints['cvs']}`, {
                 headers: {
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${access_token}`
                 }
             })
             setList(res.data)

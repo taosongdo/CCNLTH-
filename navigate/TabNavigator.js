@@ -6,10 +6,10 @@ import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Styles from '../Styles';
 import ChatList from '../components/Chat/ChatList';
 import { useContext } from 'react';
-import { userContext } from '../App';
+import { UserContext } from '../config/AppContext';
 const TabNavigator = () => {
     const Tab = createBottomTabNavigator()
-    const { token } = useContext(userContext)
+    const { access_token } = useContext(UserContext)
     return (
         <Tab.Navigator
             screenOptions={{
@@ -31,7 +31,7 @@ const TabNavigator = () => {
                 }}
             />
             {
-                token &&
+                access_token &&
                 <Tab.Screen
                     name="ChatList"
                     component={ChatList}

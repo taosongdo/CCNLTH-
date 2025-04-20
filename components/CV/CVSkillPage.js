@@ -3,13 +3,13 @@ import { View, TouchableWithoutFeedback, Keyboard, Alert } from "react-native"
 import ScrollList from "../ScrollList"
 import { useContext, useEffect, useState} from "react"
 import Apis, { endpoints } from "../../config/Apis"
-import { userContext } from '../../App'
+import { UserContext } from "../../config/AppContext"
 import InputBar from "../InputBar"
 import TouchButton from "../TouchButton"
 import InfoBar from "../InfoBar"
 
 const CVSkillPage = () => {
-    const { token } = useContext(userContext)
+    const { access_token } = useContext(UserContext)
 
     const [skillList, setSkillList] = useState()
     const [value, setValue] = useState()
@@ -18,7 +18,7 @@ const CVSkillPage = () => {
         try {
             const res = await Apis.get(endpoints['skills'], {
                 headers: {
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${access_token}`
                 }
             })
             setSkillList(res.data)
@@ -31,7 +31,7 @@ const CVSkillPage = () => {
         try {
             const res = await Apis.get(endpoints['skills-detail'](params.id), {
                 headers: {
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${access_token}`
                 }
             })
             setValue(res.data.value)
@@ -56,7 +56,7 @@ const CVSkillPage = () => {
                             try {
                                 await Apis.delete(endpoints['skills-detail'](id), {
                                     headers: {
-                                        Authorization: `Bearer ${token}`
+                                        Authorization: `Bearer ${access_token}`
                                     }
                                 })
                                 setSkillList(deleteItem(skillList, 'id', id))
@@ -84,7 +84,7 @@ const CVSkillPage = () => {
                     value: value
                 }, {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${access_token}`
                     }
                 })
                 setSkillList(replaceItem(skillList, "id", res.data.id, res.data))
@@ -94,7 +94,7 @@ const CVSkillPage = () => {
                     value: value
                 }, {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${access_token}`
                     }
                 })
                 setSkillList([res.data, ...skillList])

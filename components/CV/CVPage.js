@@ -1,7 +1,7 @@
 import { View, Alert, Keyboard, TouchableWithoutFeedback, ScrollView, StyleSheet } from 'react-native'
 import { useContext, useEffect, useState } from 'react';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { userContext } from '../../App';
+import { UserContext } from '../../config/AppContext';
 import WebView from 'react-native-webview';
 import InputBar from '../InputBar';
 import htmlContent from '../../config/htmlContent'
@@ -20,7 +20,7 @@ const CVPage = ({ navigation }) => {
     const params = route.params;
 
     const navigationHook = useNavigation()
-    const { token } = useContext(userContext)
+    const { access_token } = useContext(UserContext)
     const [name, setName] = useState("")
     const [image, setImage] = useState("")
     const [cvInfomation, setCVInformation] = useState()
@@ -48,7 +48,7 @@ const CVPage = ({ navigation }) => {
             formData.append('name', "cv tự tạo")
             const res = await Apis.post(`${endpoints['cvs']}`, formData, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${access_token}`,
                     "Content-Type": "multipart/form-data"
                 },
             })
@@ -67,7 +67,7 @@ const CVPage = ({ navigation }) => {
                 name: name
             }, {
                 headers: {
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${access_token}`
                 }
             })
             Alert.alert("thông báo", "đã đổi tên thành công")
@@ -81,7 +81,7 @@ const CVPage = ({ navigation }) => {
         try {
             await Apis.delete(endpoints['applies-details'](params.applyId), {
                 headers: {
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${access_token}`
                 }
             })
             params.setCVId(null)
@@ -109,7 +109,7 @@ const CVPage = ({ navigation }) => {
                 message: message
             }, {
                 headers: {
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${access_token}`
                 }
 
             })
@@ -137,7 +137,7 @@ const CVPage = ({ navigation }) => {
 
                 const res = await Apis.get(`${params.cvId ? endpoints['cvs-detail'](params.cvId) : endpoints['applies-details'](params.applyId)}`, {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${access_token}`
                     }
                 })
                 if (params.cvId) {
@@ -156,7 +156,7 @@ const CVPage = ({ navigation }) => {
             else {
                 const res = await Apis.get(`${endpoints['cv-information']}`, {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${access_token}`
                     }
                 })
                 setCVInformation(res.data)

@@ -1,7 +1,6 @@
 
 import { useContext, useEffect, useState, useRef } from "react"
-import { View, Text, Image } from "react-native"
-import { userContext } from "../../App"
+import { View, Text } from "react-native"
 import { StyleSheet } from "react-native"
 import TouchButton from "../TouchButton"
 import InfoBar from "../InfoBar"
@@ -14,9 +13,12 @@ import Styles from "../../Styles"
 import Apis, { endpoints } from "../../config/Apis"
 import Avatar from "../Avatar"
 import { deleteItem } from "../../config/util"
+import { UserDispatchContext, UserContext } from "../../config/AppContext"
 
 const PersonalPage = ({ navigation }) => {
-    const { token, role, setToken, setRole } = useContext(userContext)
+    const { access_token, role } = (useContext(UserContext))
+
+    const dispatchUser = useContext(UserDispatchContext)
     const [avatar, setAvatar] = useState(null)
     const [email, setEmail] = useState(null)
     const [firstName, setFirstName] = useState(null)
@@ -24,9 +26,9 @@ const PersonalPage = ({ navigation }) => {
     const [phoneList, setPhoneList] = useState([])
     const [username, setUsername] = useState(null)
     const [cvList, setCVList] = useState([])
-    const [loading, setLoading] = useState(false)
+    const [user, setUser] = useState({})
+    const [loading, setLoading] = useState(true)
     const [name, setName] = useState("")
-
 
     const bottomSheetRef = useRef(null);
 
@@ -39,6 +41,94 @@ const PersonalPage = ({ navigation }) => {
     const createCVPressHandler = () => {
         navigation.navigate("trang tạo CV")
     }
+
+    const deleteItemHandler = async (id) => {
+        try {
+            await Apis.delete(endpoints['cvs-detail'](id), {
+                headers: {
+                    Authorization: `Bearer ${access_token}`
+                }
+            })
+            user.cvs = setCVList([...deleteItem(user.cvs, 'id', id)])
+            setUser({ ...user })
+        }
+        catch (err) {
+            console.log(err)
+        }
+    }
+
+    const loadData = async () => {
+        if (access_token) {
+            try {
+                setLoading(true)
+                const res = await Apis.get(`${endpoints['current-user']}`, {
+                    headers: {
+                        Authorization: `Bearer ${access_token}`,
+                        "Content-Type": "application/json",
+                    }
+                })
+
+                setAvatar(res.data.avatar)
+                setEmail(res.data.email)
+                setFirstName(res.data.first_name)
+                setLastName(res.data.last_name)
+                setUsername(res.data.username)
+                setPhoneList(res.data.phones)
+                setUser(res.data)
+                setCVList(res.data.cvs)
+
+            }
+            catch (err) {
+                console.log(err)
+            }
+            setLoading(false)
+        }
+    }
+    const JobViewHandler = () => {
+        navigation.navigate("trang danh sách bài đăng", { 'owner': 1 })
+    }
+
+    const itemList = [
+        {
+            type: "infoBar",
+            title: "họ và tên",
+            keyList: ['last_name', 'first_name']
+        },
+        {
+            type: "infoBar",
+            title: "tài khoản",
+            key: `username`
+        },
+        {
+            type: "infoBar",
+            title: "email",
+            key: `email`
+        },
+        {
+            type: 'list',
+            listKey: 'phones',
+            subTitleKey: 'số điện thoại',
+            subValuekey: 'value'
+        },
+        role === 2 ?
+            {
+                type: "button",
+                title: "xem bài đăng công việc",
+                pressHandler: JobViewHandler
+            } :
+            {
+                type: 'scrollList',
+                listKey: 'cvs',
+                itemPressHandler: cvPressHandler,
+                bottomSheetRef: bottomSheetRef,
+                listName: "danh sách CV",
+                loadData: loadData,
+                keyItems: { 'cvId': 'id' },
+                title: "cv",
+                contentKeys: ["name"],
+                deleteItemHandler: deleteItemHandler,
+            }
+    ]
 
     const pickFile = async () => {
         setLoading(true)
@@ -54,62 +144,26 @@ const PersonalPage = ({ navigation }) => {
             });
             const res = await Apis.post(`${endpoints['cvs-create']}`, formData, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${access_token}`,
                     "Content-Type": "multipart/form-data"
                 },
             })
-            setCVList([...cvList, { id: res.data.id, name: res.data.name }])
+            user.cvs = ([...user.cvs, { id: res.data.id, name: res.data.name }])
+            setUser({ ...user })
         }
         catch (err) {
             console.log(err.response.data)
         }
         setLoading(false)
     };
-    const loadData = async () => {
-        if (token) {
-            try {
-                setLoading(true)
-                const res = await Apis.get(`${endpoints['current-user']}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    }
-                })
-                setLoading(false)
-                setAvatar(res.data.avatar)
-                setEmail(res.data.email)
-                setFirstName(res.data.first_name)
-                setLastName(res.data.last_name)
-                setUsername(res.data.username)
-                setPhoneList(res.data.phones)
-                setCVList(res.data.cvs)
-            }
-            catch (err) {
-                console.log(err)
-            }
-        }
-    }
-    const JobViewHandler = () => {
-        navigation.navigate("trang danh sách bài đăng", { 'owner': 1 })
-    }
-    const deleteItemHandler = async (id) => {
-        try {
-            await Apis.delete(endpoints['cvs-detail'](id), {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            })
-            setCVList([...deleteItem(cvList, 'id', id)])
-        }
-        catch (err) {
 
-        }
-    }
+
+
     useEffect(() => {
         loadData()
-    }, [token])
+    }, [access_token])
 
-    if (token === null) {
+    if (!(access_token)) {
         return (
             <View style={[Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.flex1, Styles.bgColorF8FAFC]} >
                 <Text style={styles.textNot}>vui lòng đăng nhập để xem</Text>
@@ -126,38 +180,71 @@ const PersonalPage = ({ navigation }) => {
         <View style={[Styles.alignItemsCenter, Styles.flex1, Styles.bgColorF8FAFC]} >
             <Avatar avatar={avatar} />
             <View style={styles.viewContainer}>
-                <InfoBar title="họ và tên" content={`${lastName} ${firstName}`} />
-                <InfoBar title="tài khoản" content={`${username}`} />
-                <InfoBar title="email" content={email} />
                 {
-                    phoneList.map((phone, Index) => {
-                        return (
-                            <InfoBar key={phone.id} title={`số điện thoại ${Index + 1}`} content={phone.value} />
-                        )
+                    itemList.map((item, index) => {
+                        if (item.type === 'infoBar') {
+                            if (item.keyList) {
+                                return (
+                                    <View key={index} style={Styles.marginBottom10}>
+                                        <InfoBar title={item.title} content={`${item.keyList.map((subItem) => (user[subItem])).join(" ")}`} />
+                                    </View>
+                                )
+                            }
+                            else {
+                                return (
+                                    <View key={index} style={Styles.marginBottom10}>
+                                        <InfoBar title={item.title} content={user[item.key]} />
+                                    </View>
+                                )
+                            }
+                        }
+                        else if (item.type === 'list') {
+                            return (
+                                <View key={index}>
+                                    {
+                                        user[item.listKey].map((subItem, index) => {
+                                            return (
+                                                <View key={index + 10} style={Styles.marginBottom10}>
+                                                    <InfoBar title={`${item.subTitleKey} ${index + 1}`} content={subItem[item.subValuekey]} />
+                                                </View>
+                                            )
+                                        })
+                                    }
+                                </View>
+                            )
+                        }
+                        else if (item.type === 'scrollList') {
+                            return (
+                                <View key={index} style={[Styles.h240, Styles.marginBottom10]}>
+                                    <ScrollList
+                                        List={user[item.listKey]}
+                                        itemPressHandler={item.itemPressHandler}
+                                        bottomSheetRef={item.bottomSheetRef}
+                                        listName={item.listName}
+                                        loadData={item.loadData}
+                                        keyItems={item.keyItems}
+                                        title={item.title}
+                                        contentKeys={item.contentKeys}
+                                        deleteItemHandler={item.deleteItemHandler}
+                                    />
+                                </View>
+                            )
+                        }
+                        else if (item.type === 'button') {
+                            return (
+                                <View key={index} style={Styles.marginBottom10}>
+                                    <TouchButton title={item.title} pressHandler={item.pressHandler} />
+                                </View>
+                            )
+                        }
                     })
-                }
-                {role == 1 &&
-                    <ScrollList
-                        List={cvList}
-                        itemPressHandler={cvPressHandler}
-                        bottomSheetRef={bottomSheetRef}
-                        listName={"danh sách CV"}
-                        loadData={loadData}
-                        keyItems={{ 'cvId': 'id' }}
-                        title="cv"
-                        contentKeys={["name"]}
-                        deleteItemHandler={deleteItemHandler}
-                    />
-                }
-                {role == 2 &&
-                    <TouchButton title="xem bài đăng công việc" backgroundColor="blue" pressHandler={JobViewHandler} />
+
                 }
 
-                <TouchButton title="Đăng xuất" pressHandler={() => { setToken(null); setRole(null) }} />
-
-
+                <TouchButton title="Đăng xuất" pressHandler={() => { dispatchUser("logout") }} />
             </View>
-            {role == 1 &&
+            {
+                role == 1 &&
                 <BottomSheet
                     ref={bottomSheetRef}
                     enablePanDownToClose={true}
@@ -177,7 +264,7 @@ const PersonalPage = ({ navigation }) => {
                     </BottomSheetView>
                 </BottomSheet>
             }
-        </View>
+        </View >
     )
 
 }

@@ -1,7 +1,7 @@
 import { View, Keyboard, TouchableWithoutFeedback, Alert } from "react-native"
 import ScrollList from "../ScrollList"
 import { useContext, useEffect, useState } from "react"
-import { userContext } from "../../App"
+import { UserContext } from "../../config/AppContext"
 import InputBar from "../InputBar"
 import TouchButton from "../TouchButton"
 import LoadPage from "../LoadPage"
@@ -10,7 +10,7 @@ import Apis, { endpoints } from "../../config/Apis"
 
 
 const CVExperienceCreatorPage = () => {
-    const { token } = useContext(userContext)
+    const { access_token } = useContext(UserContext)
     const [experiencesList, setExperiencesList] = useState()
     const [companyName, setCompanyName] = useState()
     const [description, setDescription] = useState()
@@ -22,7 +22,7 @@ const CVExperienceCreatorPage = () => {
             setLoading(true)
             const res = await Apis.get(`${endpoints['experiences']}`, {
                 headers: {
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${access_token}`
                 }
             })
             setExperiencesList(res.data)
@@ -43,7 +43,7 @@ const CVExperienceCreatorPage = () => {
         try {
             const res = await Apis.get(endpoints['experiences-detail'](params.id), {
                 headers: {
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${access_token}`
                 }
             })
             setCompanyName(res.data.company_name)
@@ -79,7 +79,7 @@ const CVExperienceCreatorPage = () => {
                         text: "OK", onPress: async () => {
                             await Apis.delete(`${endpoints['experiences-detail'](id)}`, {
                                 headers: {
-                                    Authorization: `Bearer ${token}`
+                                    Authorization: `Bearer ${access_token}`
                                 }
                             })
                             setExperiencesList(deleteItem(experiencesList, 'id', id))
@@ -103,7 +103,7 @@ const CVExperienceCreatorPage = () => {
                     description: description
                 }, {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${access_token}`
                     }
                 })
                 setExperiencesList(replaceItem(experiencesList, 'id', res.data.id, res.data))
@@ -120,7 +120,7 @@ const CVExperienceCreatorPage = () => {
                     description: description
                 }, {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${access_token}`
                     }
                 })
                 setExperiencesList([res.data, ...experiencesList])

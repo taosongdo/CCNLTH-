@@ -4,14 +4,14 @@ import { useEffect, useState, useContext } from "react"
 import Styles from "../../Styles"
 import Apis, { endpoints } from "../../config/Apis"
 import InputBar from "../InputBar"
-import { userContext } from "../../App"
+import { UserContext } from "../../config/AppContext"
 import TouchButton from "../TouchButton"
 import LoadPage from "../LoadPage"
 import CityDistrict from "../CityDistrict"
 
 
 const JobSearchCriteria = () => {
-    const { token } = useContext(userContext)
+    const { access_token } = useContext(UserContext)
     const [jobType, setJobType] = useState("")
     const [jobTypeList, setJobTypeList] = useState([
         { label: "Full-Time", value: 1 },
@@ -37,7 +37,7 @@ const JobSearchCriteria = () => {
         try {
             const res = await Apis.get(endpoints['job-search-criteria'], {
                 headers: {
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${access_token}`
                 }
             })
             if (!(res.data.message)) {
@@ -65,7 +65,7 @@ const JobSearchCriteria = () => {
                     job_type: jobType
                 }, {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${access_token}`
                     }
                 })
             }
@@ -76,7 +76,7 @@ const JobSearchCriteria = () => {
                     job_type: jobType
                 }, {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${access_token}`
                     }
                 })
                 setApplicantId(res.data.applicant)

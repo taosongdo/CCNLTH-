@@ -3,7 +3,7 @@ import { useEffect, useState, useContext } from 'react'
 import { useRoute } from '@react-navigation/native';
 import Tag from '../Tag'
 import { Alert } from 'react-native'
-import { userContext } from '../../App'
+import { UserContext } from '../../config/AppContext';
 import { FontAwesome5, FontAwesome6 } from 'react-native-vector-icons'
 import DropDownPicker from 'react-native-dropdown-picker'
 import Styles from '../../Styles'
@@ -11,7 +11,7 @@ import Apis, { endpoints } from '../../config/Apis'
 import TouchButton from '../TouchButton';
 import { deleteItem } from '../../config/util';
 import InputBar from '../InputBar';
-import FontAwesome from "react-native-vector-icons/FontAwesome"
+
 
 
 const IndexPage = ({ navigation }) => {
@@ -19,7 +19,7 @@ const IndexPage = ({ navigation }) => {
     const params = route.params;
     const [jobList, setJobList] = useState()
     const [nextUrl, setNextUrl] = useState()
-    const { token, role } = useContext(userContext)
+    const { access_token } = useContext(UserContext)
     const [optionCheck, setOptionCheck] = useState(false)
     const [keyword, setKeyword] = useState("")
     const [salaryMax, setSalaryMax] = useState(null)
@@ -77,7 +77,7 @@ const IndexPage = ({ navigation }) => {
         });
     }
     const pressHandler = (id, owner) => {
-        if (token) {
+        if (access_token) {
             navigation.navigate("trang công việc", { id: id, owner: owner, updateJobPostingList: updateJobPostingList, deleteTagJobPosting: deleteTagJobPosting })
         }
         else {
@@ -94,7 +94,7 @@ const IndexPage = ({ navigation }) => {
     const loadData = async (url) => {
         try {
             const owner = params?.owner
-            const headers = owner ? { Authorization: `Bearer ${token}` } : {}
+            const headers = owner ? { Authorization: `Bearer ${access_token}` } : {}
             const res = await Apis.get(url, {
                 headers
             })
@@ -192,9 +192,6 @@ const IndexPage = ({ navigation }) => {
                                     placeholder="Chọn loại hình làm việc"
                                 />
                             </View>
-                        </View>
-                        <View style={[Styles.p10]}>
-                            <TouchButton title="thêm bài đăng mới" pressHandler={() => { navigation.navigate("trang tạo bài đăng công việc", { addNew: addNew }) }} />
                         </View>
                         {
                             params &&
