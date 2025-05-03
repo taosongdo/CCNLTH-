@@ -49,7 +49,8 @@ const PersonalPage = ({ navigation }) => {
                     Authorization: `Bearer ${access_token}`
                 }
             })
-            user.cvs = setCVList([...deleteItem(user.cvs, 'id', id)])
+            console.log([...deleteItem(user.cvs, 'id', id)])
+            user.cvs = [...deleteItem(user.cvs, 'id', id)]
             setUser({ ...user })
         }
         catch (err) {
@@ -134,7 +135,7 @@ const PersonalPage = ({ navigation }) => {
         setLoading(true)
         try {
             let result = await DocumentPicker.getDocumentAsync({ type: "application/pdf" });
-            if (result.canceled) { return };
+            if (result.canceled) { setLoading(false); return };
             const formData = new FormData()
             formData.append('name', name ? name : result.assets[0].name)
             formData.append("image", {

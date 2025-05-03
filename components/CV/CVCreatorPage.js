@@ -46,11 +46,11 @@ const CVCreatingPage = ({ navigation }) => {
     ]
 
     return (
-        <View style={[styles.pageView, Styles.flex1]}>
+        <View style={[Styles, Styles.flex1]}>
             {
-                itemList.map((item) => {
+                itemList.map((item, index) => {
                     return (
-                        <View style={Styles.p10}>
+                        <View key={index} style={Styles.p10}>
                             <TouchButton title={item.title} pressHandler={item.pressHandler} />
                         </View>
                     )

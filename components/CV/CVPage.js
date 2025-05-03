@@ -46,7 +46,7 @@ const CVPage = ({ navigation }) => {
                 name: "cv.pdf"
             })
             formData.append('name', "cv tự tạo")
-            const res = await Apis.post(`${endpoints['cvs']}`, formData, {
+            const res = await Apis.post(`${endpoints['cvs-create']}`, formData, {
                 headers: {
                     Authorization: `Bearer ${access_token}`,
                     "Content-Type": "multipart/form-data"

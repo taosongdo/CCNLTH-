@@ -36,12 +36,12 @@ const ScrollList = (props) => {
                 contentContainerStyle={Styles.p10}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <View style={[Styles.flexDirectionRow]}>
-                        <View style={Styles.flex1}>
+                    <View style={[Styles.flexDirectionRow, Styles.marginBottom10]}>
+                        <View style={[Styles.flex1]}>
                             <TouchButton title={`${props.contentKeys.map((contentKey) => { return item[contentKey] }).join(" - ")}`} params={paramsParser(item, props.keyItems)} backgroundColor={"blue"} pressHandler={props.itemPressHandler} />
                         </View>
                         {props.deleteItemHandler &&
-                            <View style={[styles.viewButton, Styles.w60, Styles.h60]}>
+                            <View style={[styles.viewButton, Styles.w60]}>
                                 <TouchButton title={"-"} height={'100%'} pressHandler={() => { props.deleteItemHandler(item.id) }} />
                             </View>
                         }
