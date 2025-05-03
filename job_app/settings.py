@@ -148,6 +148,6 @@ REST_FRAMEWORK = {
     )
 }
 DEFAULT_AVATAR_URL = "https://res.cloudinary.com/dx6brcofe/image/upload/v1736245841/woxspsofipalpoz8r4aj.jpg"
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "192.168.0.103"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "10.17.64.104"]
 CLIENT_ID = '7zznUxh1AS9kFccouzowZkFsRiEgLuuS4E20QmlQ'
 CLIENT_SECRET = 'BKSjvHjsDJUZJgACILvXmFOYE0dhncWAHm6LQ6XHxW4T32FyiSqzjiiTj9HEj0qgT6bGKDOwPJNJf7PMxBwkHYSgHO1vmq6rUIN15UyRBoLIqtEzuw8PBdNL32XFMi6P'

@@ -1,5 +1,5 @@
 from django.forms import ValidationError
-from job.models import CV, Result, User,JobPosting, Apply,ApplyStatus,City,District,Phone,Experience,EducationLevel,Skill,JobSearchCriteria,JobType,UserRole,ResultStatus,ApplyDateAndMessage
+from job.models import CV, Result, User,JobPosting, Apply,ApplyStatus,City,District,Phone,Experience,EducationLevel,Skill,JobSearchCriteria,JobType,UserRole,ResultStatus,ApplyDateAndMessage, VideoCallRoom
 from rest_framework import serializers
 from django.db.models import Count, Q, F
 
@@ -162,41 +162,51 @@ class JobPostingSerializer(serializers.ModelSerializer):
         model=JobPosting
         fields=['id','employer','job','district','salary','quantity']
 
+class VideoCallRoomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=VideoCallRoom
+        fields=['apply_id','url']
 class ApplyChatSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if instance.role == 1:
-            user_list = User.objects.select_related("cv__apply__job_posting__employer")\
-            .filter(cv__apply__isnull=False)\
+            user_list = User.objects\
+            .filter(cv__apply__isnull=False, cv__apply__apply_status__in=[ApplyStatus.INTERVIEWING,ApplyStatus.PASSED])\
             .annotate(
                 apply_id = F("cv__apply__id"),
-                employer_id = F("cv__apply__job_posting__employer__id"),
-                employer_first_name = F("cv__apply__job_posting__employer__first_name"),
-                employer_last_name = F("cv__apply__job_posting__employer__last_name"),
-                employer_avatar = F("cv__apply__job_posting__employer__avatar")
+                another_user_id = F("cv__apply__job_posting__employer__id"),
+                another_user_first_name = F("cv__apply__job_posting__employer__first_name"),
+                another_user_last_name = F("cv__apply__job_posting__employer__last_name"),
+                another_user_avatar = F("cv__apply__job_posting__employer__avatar")
             )\
             .values(
                 'apply_id',
-                'employer_id',
-                'employer_first_name',
-                'employer_last_name',
-                'employer_avatar'
+                'another_user_id',
+                'another_user_first_name',
+                'another_user_last_name',
+                'another_user_avatar'
             ).filter(id=instance.id)
             for user in user_list:
-                user['employer_avatar'] = user['employer_avatar'].url
+                user['another_user_avatar'] = user['another_user_avatar'].url
             data["chat_list"] = user_list
         else:
-            user_list = User.objects.select_related("job_posting__apply__cv__applicant")\
-            .filter(cv__apply__isnull=False) .annotate(
-                apply_id = F("job_posting__apply__id"),
-                applicant_id =F("job_posting__apply__cv__applicant__id"),
-                applicant_first_name = F("job_posting__apply__cv__applicant__first_name"),
-                applicant_last_name = F("job_posting__apply__cv__applicant__last_name"),
-                applicant_avatar = F("job_posting__apply__cv__applicant__avatar"),
-            ).values('apply_id','employer_id','applicant_first_name','applicant_last_name','applicant_avatar').\
+            user_list = User.objects\
+            .filter(jobposting__apply__id__isnull=False, jobposting__apply__apply_status__in=[ApplyStatus.INTERVIEWING, ApplyStatus.PASSED]) .annotate(
+                apply_id = F("jobposting__apply__id"),
+                another_user_id =F("jobposting__apply__cv__applicant__id"),
+                another_user_first_name = F("jobposting__apply__cv__applicant__first_name"),
+                another_user_last_name = F("jobposting__apply__cv__applicant__last_name"),
+                another_user_avatar = F("jobposting__apply__cv__applicant__avatar"),
+            ).values(
+                'apply_id',
+                'another_user_id',
+                'another_user_first_name',
+                'another_user_last_name',
+                'another_user_avatar'
+            ).\
             filter(id=instance.id)
             for user in user_list:
-                user['applicant_avatar'] = user['applicant_avatar'].url
+                user['another_user_avatar'] = user['another_user_avatar'].url
             data["chat_list"] = user_list        
         return data
     class Meta:

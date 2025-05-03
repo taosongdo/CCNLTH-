@@ -24,8 +24,9 @@ from job.serializers import \
     ExperienceSerializer,\
     ExperienceDetailSerializer,\
     JobSearchCriteriaSerializer, \
-    ApplyDateAndMessageSerializer
-from job.models import CV, Apply, ExpoPushToken, User, JobPosting, ResultStatus, UserRole,ApplyStatus,City,District,Skill,EducationLevel,Experience,Result,ApplyDateAndMessage
+    ApplyDateAndMessageSerializer,\
+    VideoCallRoomSerializer
+from job.models import CV, Apply, ExpoPushToken, User, JobPosting, ResultStatus, UserRole,ApplyStatus,City,District,Skill,EducationLevel,Experience,Result,ApplyDateAndMessage, VideoCallRoom
 from job.paginator import Paginator
 from rest_framework.response import Response
 from rest_framework import viewsets, generics, status, permissions
@@ -200,9 +201,10 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
         return Response(CVSerializer(cvs,many=True).data, status=status.HTTP_200_OK)
     
     @action(methods=['get'],detail=False,url_path='chat')
-    def get_cvs(self, request):
+    def get_chat(self, request):
         user = request.user 
         return Response(ApplyChatSerializer(user).data, status=status.HTTP_200_OK)
+    
     
 class EducationLevelViewSet(viewsets.ViewSet,generics.CreateAPIView,generics.RetrieveAPIView,generics.UpdateAPIView,generics.DestroyAPIView):
     queryset = EducationLevel.objects.filter(active=True)
@@ -366,11 +368,18 @@ class ApplyViewSet(viewsets.ViewSet,generics.RetrieveAPIView,generics.CreateAPIV
     queryset = Apply.objects.filter(active=True)
     serializer_class = ApplyDetailSerializer
     def get_permissions(self):
-        
         if self.action.__eq__("retrieve"):
             return [IsCVEmployerOrApplicantOwner()]
+        elif self.action.__eq__("partial_update"):
+            return [IsCVEmployerOwner()]
         return [IsCVApplicantOwner()]
     
+    def update(self, request, *args, **kwargs):
+        apply_status = request.data.get("apply_status")
+        apply = self.get_object()
+        apply.apply_status = apply_status
+        apply.save()
+        return Response(ApplyDetailSerializer(apply).data, status=status.HTTP_201_CREATED)
     
     def create(self, request, *args, **kwargs):
         apply_serializer = ApplyDetailSerializer(data={
@@ -389,6 +398,15 @@ class ApplyViewSet(viewsets.ViewSet,generics.RetrieveAPIView,generics.CreateAPIV
             self.perform_destroy(apply)
             return Response(status=status.HTTP_200_OK)
         return Response({"message":"không thể xóa vì đã được nhà tuyển dụng đã chấp nhận"}, status=status.HTTP_400_BAD_REQUEST)
+    
+class VideoCallRoomViewSet(viewsets.ViewSet,generics.CreateAPIView):
+    queryset= VideoCallRoom.objects.filter(active=True)
+    serializer_class = VideoCallRoomSerializer
+    def create(self, request, *args, **kwargs):
+        apply_id = request.data.get("apply_id")
+        url = request.data.get("url")
+        video_call_url = VideoCallRoom.objects.get_or_create(apply_id=apply_id,url=url)
+        return Response(VideoCallRoomSerializer(video_call_url).data, status=status.HTTP_201_CREATED)
 
 class ApplyMoreInfoViewSet(viewsets.ViewSet,generics.CreateAPIView):
     queryset = ApplyDateAndMessage.objects.filter(active=True)
@@ -405,8 +423,7 @@ class ApplyMoreInfoViewSet(viewsets.ViewSet,generics.CreateAPIView):
         apply = Apply.objects.filter(active=True, id=request.data.get("apply"))
         apply.update(apply_status=apply_status)
         apply_data_and_message = apply_data_and_message_serializer.save()
-        set_up_alert(apply[0].cv.applicant.id, request.data.get("interviewing_date"), apply[0].job_posting.job)
-        set_up_alert(apply[0].job_posting.employer.id,  request.data.get("interviewing_date"), apply[0].job_posting.job)
+        set_up_alert(apply[0].id, request.data.get("interviewing_date"))
         return Response(ApplyDateAndMessageSerializer(apply_data_and_message,context={"apply_status":apply_status}).data,status=status.HTTP_201_CREATED)
 
     

@@ -117,7 +117,6 @@ class Apply(BaseModel):
     job_posting = models.ForeignKey(JobPosting, on_delete=models.CASCADE)
     apply_status = models.IntegerField(choices=ApplyStatus.choices, default=ApplyStatus.SENT)
 
-
 class ApplyDateAndMessage(BaseModel):
     apply = models.OneToOneField(Apply, primary_key=True,on_delete = models.CASCADE)
     message = models.TextField()
@@ -127,5 +126,10 @@ class ExpoPushToken(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     value = models.CharField(max_length=100)
 
+    
+class VideoCallRoom(BaseModel):
+    apply_id = models.OneToOneField(Apply,primary_key=True,on_delete=models.CASCADE)
+    url = models.CharField(max_length=30)
+    
 
     
