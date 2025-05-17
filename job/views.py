@@ -423,7 +423,8 @@ class ApplyMoreInfoViewSet(viewsets.ViewSet,generics.CreateAPIView):
         apply = Apply.objects.filter(active=True, id=request.data.get("apply"))
         apply.update(apply_status=apply_status)
         apply_data_and_message = apply_data_and_message_serializer.save()
-        set_up_alert(apply[0].id, request.data.get("interviewing_date"))
+        if request.data.get("interviewing_date"):
+            set_up_alert(apply[0].id, request.data.get("interviewing_date"))
         return Response(ApplyDateAndMessageSerializer(apply_data_and_message,context={"apply_status":apply_status}).data,status=status.HTTP_201_CREATED)
 
     

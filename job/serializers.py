@@ -171,9 +171,10 @@ class ApplyChatSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         if instance.role == 1:
             user_list = User.objects\
-            .filter(cv__apply__isnull=False, cv__apply__apply_status__in=[ApplyStatus.INTERVIEWING,ApplyStatus.PASSED])\
+            .filter(cv__apply__isnull=False, cv__apply__apply_status__in=[ApplyStatus.INTERVIEWING,ApplyStatus.PASSED,ApplyStatus.FAILED])\
             .annotate(
                 apply_id = F("cv__apply__id"),
+                apply_status = F("cv__apply__apply_status"),
                 another_user_id = F("cv__apply__job_posting__employer__id"),
                 another_user_first_name = F("cv__apply__job_posting__employer__first_name"),
                 another_user_last_name = F("cv__apply__job_posting__employer__last_name"),
@@ -181,6 +182,7 @@ class ApplyChatSerializer(serializers.ModelSerializer):
             )\
             .values(
                 'apply_id',
+                'apply_status',
                 'another_user_id',
                 'another_user_first_name',
                 'another_user_last_name',
@@ -191,14 +193,16 @@ class ApplyChatSerializer(serializers.ModelSerializer):
             data["chat_list"] = user_list
         else:
             user_list = User.objects\
-            .filter(jobposting__apply__id__isnull=False, jobposting__apply__apply_status__in=[ApplyStatus.INTERVIEWING, ApplyStatus.PASSED]) .annotate(
+            .filter(jobposting__apply__id__isnull=False, jobposting__apply__apply_status__in=[ApplyStatus.INTERVIEWING, ApplyStatus.PASSED,ApplyStatus.FAILED]) .annotate(
                 apply_id = F("jobposting__apply__id"),
+                apply_status = F("jobposting__apply__apply_status"),
                 another_user_id =F("jobposting__apply__cv__applicant__id"),
                 another_user_first_name = F("jobposting__apply__cv__applicant__first_name"),
                 another_user_last_name = F("jobposting__apply__cv__applicant__last_name"),
                 another_user_avatar = F("jobposting__apply__cv__applicant__avatar"),
             ).values(
                 'apply_id',
+                'apply_status',
                 'another_user_id',
                 'another_user_first_name',
                 'another_user_last_name',
@@ -219,7 +223,9 @@ class ApplySerializer(serializers.ModelSerializer):
         data['apply_status_label'] = ApplyStatus(instance.apply_status).label
         cv = instance.cv
         data['cv_name'] = cv.name
-        data['cv_id'] = cv.id 
+        data['cv_id'] = cv.id
+        more_info = instance.applydateandmessage if hasattr(instance, 'applydateandmessage') else None
+        data['interviewing_date'] = more_info.interviewing_date if more_info else None 
         
         return data
     class Meta:
