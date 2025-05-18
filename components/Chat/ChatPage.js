@@ -70,8 +70,7 @@ const ChatPage = ({ route, navigation }) => {
         {
           text: "đánh rót", // Nút hủy
           onPress: () => {
-            changeData(5),
-              deleteItemHandler(apply_id)
+            changeData(5)
             navigation.goBack()
           }
         },
@@ -79,7 +78,6 @@ const ChatPage = ({ route, navigation }) => {
           text: "đánh đậu", // Nút hủy
           onPress: () => {
             changeData(4)
-            deleteItemHandler(apply_id)
             navigation.goBack()
           }
         },

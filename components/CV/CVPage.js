@@ -192,7 +192,9 @@ const CVPage = ({ navigation }) => {
                                     <ScrollView style={[Styles.marginBottom10, styles.maxHeight150]}>
                                         <InfoBar content={message} multiline={true} />
                                     </ScrollView>
-                                    <InfoBar content={`${applyStatusLabel} - ${interviewingDate}`} />
+                                    <View style={Styles.marginBottom10}>
+                                        <InfoBar content={`${applyStatusLabel} - ${interviewingDate}`} />
+                                    </View>
                                     {
                                         (!params.owner && applyStatus == 5) && <TouchButton title={"gỡ ứng tuyển"} pressHandler={deleteApplyHandler} />
                                     }

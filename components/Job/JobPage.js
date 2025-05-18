@@ -81,7 +81,8 @@ const JobPage = ({ navigation }) => {
                 if (res.data.apply) {
                     setCVId(res.data.apply.cv_id)
                     setApplyId(res.data.apply.id)
-                    setCVInformation(`${res.data.apply.apply_status_label}: ${res.data.apply.interviewing_data ? res.data.apply.interviewing_data : 'nhà tuyển dụng chưa lên lịch'} - ${res.data.apply.cv_name}`)
+                    console.log(res.data.apply)
+                    setCVInformation(`${res.data.apply.apply_status_label}: ${res.data.apply.interviewing_date ? res.data.apply.interviewing_date : 'nhà tuyển dụng chưa lên lịch'} - ${res.data.apply.cv_name}`)
                 }
                 if (res.data.result) {
                     setResultId(res.data.result.job_posting)

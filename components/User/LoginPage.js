@@ -356,16 +356,14 @@ const LoginPage = ({ navigation }) => {
                                     }
                                     else if (item.type === 'dropDownList') {
                                         return (
-                                            <>
-                                                <DropDownPicker key={index}
-                                                    style={[styles.list, Styles.marginBottom10, Styles.borderRadius10, Styles.bgColorBFDBFE, styles.districtList]}
-                                                    open={item.open}
-                                                    setOpen={item.setOpen}
-                                                    value={item.value}
-                                                    setValue={item.setValue}
-                                                    items={item.items}
-                                                />
-                                            </>
+                                            <DropDownPicker key={index}
+                                                style={[styles.list, Styles.marginBottom10, Styles.borderRadius10, Styles.bgColorBFDBFE, styles.districtList]}
+                                                open={item.open}
+                                                setOpen={item.setOpen}
+                                                value={item.value}
+                                                setValue={item.setValue}
+                                                items={item.items}
+                                            />
                                         )
                                     }
                                 })}
