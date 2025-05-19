@@ -20,12 +20,6 @@ const PersonalPage = ({ navigation }) => {
 
     const dispatchUser = useContext(UserDispatchContext)
     const [avatar, setAvatar] = useState(null)
-    const [email, setEmail] = useState(null)
-    const [firstName, setFirstName] = useState(null)
-    const [lastName, setLastName] = useState(null)
-    const [phoneList, setPhoneList] = useState([])
-    const [username, setUsername] = useState(null)
-    const [cvList, setCVList] = useState([])
     const [user, setUser] = useState({})
     const [loading, setLoading] = useState(true)
     const [name, setName] = useState("")
@@ -69,15 +63,9 @@ const PersonalPage = ({ navigation }) => {
                     }
                 })
 
-                setAvatar(res.data.avatar)
-                setEmail(res.data.email)
-                setFirstName(res.data.first_name)
-                setLastName(res.data.last_name)
-                setUsername(res.data.username)
-                setPhoneList(res.data.phones)
+               
                 setUser(res.data)
-                setCVList(res.data.cvs)
-
+                setAvatar(res.data.avatar)
             }
             catch (err) {
                 console.log(err)
@@ -111,7 +99,7 @@ const PersonalPage = ({ navigation }) => {
             subTitleKey: 'số điện thoại',
             subValuekey: 'value'
         },
-        role === 2 ?
+        user.role === 2 ?
             {
                 type: "button",
                 title: "xem bài đăng công việc",
@@ -245,7 +233,7 @@ const PersonalPage = ({ navigation }) => {
                 <TouchButton title="Đăng xuất" pressHandler={() => { dispatchUser("logout") }} />
             </View>
             {
-                role == 1 &&
+                user.role == 1 &&
                 <BottomSheet
                     ref={bottomSheetRef}
                     enablePanDownToClose={true}
