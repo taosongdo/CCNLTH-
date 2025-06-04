@@ -3,6 +3,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import IndexPage from '../components/Home/IndexPage';
 import PersonalPage from '../components/User/PersonalPage';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import Styles from '../Styles';
 import ChatList from '../components/Chat/ChatList';
 import { useContext } from 'react';
@@ -36,9 +37,9 @@ const TabNavigator = () => {
                     name="ChatList"
                     component={ChatList}
                     options={{
-                        tabBarLabel: "trang cá nhân",
+                        tabBarLabel: "trang chat",
                         tabBarIcon: ({ color, size }) => {
-                            return <FontAwesome6 name={"user"} size={size} color={color} />;
+                            return <AntDesign name={"message1"} size={size} color={color} />;
                         },
                     }}
                 />

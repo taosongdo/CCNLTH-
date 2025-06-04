@@ -1,21 +1,17 @@
 import Styles from "../../Styles"
 import { ScrollView, View, StyleSheet, Keyboard } from "react-native"
-import DropDownPicker from 'react-native-dropdown-picker'
 import { useContext, useEffect, useState } from "react"
 import Apis, { endpoints } from "../../config/Apis"
 import { useRoute } from '@react-navigation/native';
 import { UserContext } from "../../config/AppContext"
 import Avatar from "../Avatar"
 import InfoBar from "../InfoBar";
-import FontAwesome from "react-native-vector-icons/FontAwesome"
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5"
 import FontAwesome6 from "react-native-vector-icons/FontAwesome6"
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"
 import TouchButton from "../TouchButton";
 import InputBar from "../InputBar";
 import CityDistrict from "../CityDistrict"
-import { ProgressViewIOSComponent } from "react-native"
-
 const JobPage = ({ navigation }) => {
     const route = useRoute()
     const params = route.params
@@ -57,7 +53,7 @@ const JobPage = ({ navigation }) => {
 
                 setAvatar(res.data.employer.avatar)
                 setName(`${res.data.employer.last_name} ${res.data.employer.first_name}`)
-                
+
 
                 setDistrict(res.data.district.id)
                 setDistrictName(res.data.district.name)
@@ -232,6 +228,7 @@ const JobPage = ({ navigation }) => {
         },
         {
             type: "infoBar",
+            brand: "FontAwesome6",
             icon: "location-dot",
             value: `${address} ${districtName} ${cityName}`,
         },
@@ -246,6 +243,7 @@ const JobPage = ({ navigation }) => {
         },
         {
             type: "infoBar",
+            brand: "MaterialCommunityIcons",
             icon: "file-document-edit-outline",
             value: `${description}`,
             multiline: true,
@@ -284,7 +282,16 @@ const JobPage = ({ navigation }) => {
                                 return (
                                     <View key={index} style={[Styles.flexDirectionRow]}>
                                         <View style={[Styles.w60, Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.marginBottom10]}>
-                                            <FontAwesome5 name={item.icon} size={30} color="#222831" />
+                                            {
+                                                item.brand == null ?
+                                                    <FontAwesome5 name={item.icon} size={30} color="#222831" /> :
+                                                    (
+                                                        item.brand == "FontAwesome6" ?
+                                                            <FontAwesome6 name={item.icon} size={30} color="#222831" /> :
+                                                            <MaterialCommunityIcons name={item.icon} size={30} color="#222831" />
+                                                    )
+                                            }
+
                                         </View>
                                         <View style={[Styles.flex1, Styles.marginBottom10]}>
                                             <InfoBar multiline={item.multiline} content={item.value} />
