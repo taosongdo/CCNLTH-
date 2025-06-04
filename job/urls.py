@@ -13,7 +13,6 @@ router.register('education-levels', views.EducationLevelViewSet, basename='educa
 router.register('skills', views.SkillViewSet, basename='skill')
 router.register('results', views.ResultViewSet, basename='result')
 router.register('applies-more-infos', views.ApplyMoreInfoViewSet, basename='applies-more-info')
-router.register('video-call-rooms',views.VideoCallRoomViewSet, basename='video-call-room-')
 
 urlpatterns = [
     path("o/token/", views.CustomTokenView.as_view(), name="custom-token"),

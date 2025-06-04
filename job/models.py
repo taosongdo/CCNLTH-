@@ -127,9 +127,4 @@ class ExpoPushToken(BaseModel):
     value = models.CharField(max_length=100)
 
     
-class VideoCallRoom(BaseModel):
-    apply_id = models.OneToOneField(Apply,primary_key=True,on_delete=models.CASCADE)
-    url = models.CharField(max_length=30)
-    
-
     

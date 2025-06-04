@@ -1,5 +1,5 @@
 from django.forms import ValidationError
-from job.models import CV, Result, User,JobPosting, Apply,ApplyStatus,City,District,Phone,Experience,EducationLevel,Skill,JobSearchCriteria,JobType,UserRole,ResultStatus,ApplyDateAndMessage, VideoCallRoom
+from job.models import CV, Result, User,JobPosting, Apply,ApplyStatus,City,District,Phone,Experience,EducationLevel,Skill,JobSearchCriteria,JobType,UserRole,ResultStatus,ApplyDateAndMessage
 from rest_framework import serializers
 from django.db.models import Count, Q, F
 
@@ -162,10 +162,6 @@ class JobPostingSerializer(serializers.ModelSerializer):
         model=JobPosting
         fields=['id','employer','job','district','salary','quantity']
 
-class VideoCallRoomSerializer(serializers.ModelSerializer):
-    class Meta:
-        model=VideoCallRoom
-        fields=['apply_id','url']
 class ApplyChatSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)

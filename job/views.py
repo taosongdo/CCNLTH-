@@ -24,9 +24,8 @@ from job.serializers import \
     ExperienceSerializer,\
     ExperienceDetailSerializer,\
     JobSearchCriteriaSerializer, \
-    ApplyDateAndMessageSerializer,\
-    VideoCallRoomSerializer
-from job.models import CV, Apply, ExpoPushToken, User, JobPosting, ResultStatus, UserRole,ApplyStatus,City,District,Skill,EducationLevel,Experience,Result,ApplyDateAndMessage, VideoCallRoom
+    ApplyDateAndMessageSerializer
+from job.models import CV, Apply, ExpoPushToken, User, JobPosting, ResultStatus, UserRole,ApplyStatus,City,District,Skill,EducationLevel,Experience,Result,ApplyDateAndMessage
 from job.paginator import Paginator
 from rest_framework.response import Response
 from rest_framework import viewsets, generics, status, permissions
@@ -399,15 +398,6 @@ class ApplyViewSet(viewsets.ViewSet,generics.RetrieveAPIView,generics.CreateAPIV
             return Response(status=status.HTTP_200_OK)
         return Response({"message":"không thể xóa vì đã được nhà tuyển dụng đã chấp nhận"}, status=status.HTTP_400_BAD_REQUEST)
     
-class VideoCallRoomViewSet(viewsets.ViewSet,generics.CreateAPIView):
-    queryset= VideoCallRoom.objects.filter(active=True)
-    serializer_class = VideoCallRoomSerializer
-    def create(self, request, *args, **kwargs):
-        apply_id = request.data.get("apply_id")
-        url = request.data.get("url")
-        video_call_url = VideoCallRoom.objects.get_or_create(apply_id=apply_id,url=url)
-        return Response(VideoCallRoomSerializer(video_call_url).data, status=status.HTTP_201_CREATED)
-
 class ApplyMoreInfoViewSet(viewsets.ViewSet,generics.CreateAPIView):
     queryset = ApplyDateAndMessage.objects.filter(active=True)
     serializer_class = ApplyDateAndMessageSerializer
