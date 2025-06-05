@@ -6,7 +6,7 @@ const Tag = (props) => {
     const item = props.item
     const params = props.params
     const setBackgroundColor = () => {
-        return params ? (item.result ? (item.result.status == 1 ? { backgroundColor: 'lightgreen' } : { backgroundColor: "pink" }) : { backgroundColor: "yellow" }) : Styles.bgColorBFDBFE
+        return (params && !params?.cvId) ? (item.result ? (item.result.status == 1 ? { backgroundColor: 'lightgreen' } : { backgroundColor: "pink" }) : { backgroundColor: "yellow" }) : Styles.bgColorBFDBFE
     }
     const reduceText = (text) => {
         return text.length < 12 ? text : (text.substring(0, 12) + "...")

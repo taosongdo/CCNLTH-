@@ -231,7 +231,12 @@ const CVPage = ({ navigation }) => {
                                     }
                                 </>
                             :
-                            <TouchButton title={"đổi tên"} pressHandler={nameChangeHandler} />
+                            <>
+                                <View style={{ paddingBottom: 10 }}>
+                                    <TouchButton title={"xem danh sách công việc đã ứng tuyển"} pressHandler={() => { navigation.navigate("trang danh sách bài đăng", { cvId: params.cvId }) }} />
+                                </View>
+                                <TouchButton title={"đổi tên"} pressHandler={nameChangeHandler} />
+                            </>
                         :
                         <TouchButton title={"tạo cv"} pressHandler={printHTML} />
                     }

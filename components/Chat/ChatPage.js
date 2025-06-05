@@ -18,7 +18,8 @@ const ChatPage = ({ route, navigation }) => {
     another_user_avatar,
     another_user_last_name,
     another_user_first_name,
-    deleteItemHandler
+    changeApplyStatus,
+    apply_status,
   } = route.params
   const { role, access_token } = useContext(UserContext)
   const [messages, setMessages] = useState([]);
@@ -71,6 +72,7 @@ const ChatPage = ({ route, navigation }) => {
           text: "đánh rót", // Nút hủy
           onPress: () => {
             changeData(5)
+            changeApplyStatus(apply_id, 5)
             navigation.goBack()
           }
         },
@@ -78,6 +80,7 @@ const ChatPage = ({ route, navigation }) => {
           text: "đánh đậu", // Nút hủy
           onPress: () => {
             changeData(4)
+            changeApplyStatus(apply_id, 4)
             navigation.goBack()
           }
         },
@@ -126,7 +129,7 @@ const ChatPage = ({ route, navigation }) => {
           }}
         />
         <View style={[Styles.flexDirectionRow, Styles.bgColorF8FAFC]}>
-          {role == 2 &&
+          {(role == 2 && apply_status == 3) &&
             <View style={[{ width: 80 }, Styles.p10]}>
               <TouchButton title={<FontAwesome name='check' />} pressHandler={acceptApply} />
             </View>

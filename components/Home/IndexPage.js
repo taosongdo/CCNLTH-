@@ -53,9 +53,9 @@ const IndexPage = ({ navigation }) => {
     const changeSalaryMaxHandler = (event) => {
         setSalaryMax(event)
     }
-    const search = async () => {
+    const search = async (domain, token) => {
         const owner = params?.owner
-        let url = `${endpoints['job-postings']}?`
+        let url = `${domain}?`
         url += `${keyword ? `keyword=${keyword}` : ``}`
         url += `${salaryMax ? `&salary_max=${salaryMax}` : ``}`
         url += `${salaryMin ? `&salary_min=${salaryMin}` : ``}`
@@ -64,7 +64,8 @@ const IndexPage = ({ navigation }) => {
         url += `${sortByDate ? `&sort_by_date=1` : ``}`
         url += `${sortBySalary ? `&sort_by_salary=1` : ``}`
         url += `${sortByPopularity ? `&sort_by_popularity=1` : ``}`
-        loadData(url)
+
+        loadData(url, token)
     }
     const updateJobPostingList = (props) => {
         jobList.forEach((job) => {
@@ -91,10 +92,10 @@ const IndexPage = ({ navigation }) => {
             );
         }
     }
-    const loadData = async (url) => {
+    const loadData = async (url, token) => {
         try {
-            const owner = params?.owner
-            const headers = owner ? { Authorization: `Bearer ${access_token}` } : {}
+
+            const headers = token ? { Authorization: `Bearer ${token}` } : {}
             const res = await Apis.get(url, {
                 headers
             })
@@ -136,7 +137,16 @@ const IndexPage = ({ navigation }) => {
     }
 
     useEffect(() => {
-        search()
+        const cvId = params?.cvId
+        if (cvId) {
+            search(endpoints['apply-job-postings'](cvId), access_token)
+        }
+        else {
+            const owner = params?.owner
+            let token = owner ? access_token : null
+            search(endpoints['job-postings'], token)
+        }
+
     }, [])
 
     return (
@@ -194,7 +204,7 @@ const IndexPage = ({ navigation }) => {
                             </View>
                         </View>
                         {
-                            params &&
+                            (params && !params?.cvId) &&
                             <View style={[Styles.p10]}>
                                 <TouchButton title="thêm bài đăng mới" pressHandler={() => { navigation.navigate("trang tạo bài đăng công việc", { addNew: addNew }) }} />
                             </View>

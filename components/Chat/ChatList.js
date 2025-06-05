@@ -10,7 +10,7 @@ import { deleteItem } from "../../config/util"
 const ChatList = ({ navigation, route }) => {
 
     const { access_token } = useContext(UserContext)
-    const [chatList, setChatList] = useState()
+    const [chatList, setChatList] = useState([])
     const [refreshing, setRefreshing] = useState(false)
     const loadData = async () => {
         try {
@@ -25,6 +25,14 @@ const ChatList = ({ navigation, route }) => {
         catch (err) {
             console.log(err)
         }
+    }
+    const changeApplyStatus = (applyId, applyStatus) => {
+        chatList.forEach((item) => {
+            if (item.apply_id === applyId) {
+                item.apply_status = applyStatus
+            }
+        })
+        setChatList([...chatList])
     }
     useEffect(() => {
         loadData()
@@ -46,6 +54,8 @@ const ChatList = ({ navigation, route }) => {
                                         another_user_avatar: item.another_user_avatar,
                                         another_user_last_name: item.another_user_last_name,
                                         another_user_first_name: item.another_user_first_name,
+                                        changeApplyStatus: changeApplyStatus,
+                                        apply_status: item.apply_status
                                     })
                                 }}>
                                     <Image source={{ uri: item.another_user_avatar }} style={[styles.h80, styles.w80, Styles.borderRadius100]} />

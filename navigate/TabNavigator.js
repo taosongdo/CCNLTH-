@@ -25,7 +25,7 @@ const TabNavigator = () => {
                 name="IndexPage"
                 component={IndexPage}
                 options={{
-                    tabBarLabel: "trang chat",
+                    tabBarLabel: "trang chủ",
                     tabBarIcon: ({ color, size }) => {
                         return <FontAwesome name={"home"} size={size} color={color} />;
                     },

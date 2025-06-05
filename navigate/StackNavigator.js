@@ -14,7 +14,6 @@ import JobPage from "../components/Job/JobPage";
 import IndexPage from "../components/Home/IndexPage";
 import CVSelectPage from "../components/Job/CVSelectPage";
 import ChatPage from "../components/Chat/ChatPage";
-import VideoCallPage from "../components/Chat/VideoCallPage.js";
 
 
 const StackNavigator = () => {
@@ -52,11 +51,6 @@ const StackNavigator = () => {
                             component={ChatPage}
                             options={{ headerShown: false }}
                         />
-                        <Stack.Screen
-                            name="trang video"
-                            component={VideoCallPage}
-                            options={{ headerShown: false }}
-                        />
                         {
                             role == 1 &&
                             <>
@@ -79,6 +73,10 @@ const StackNavigator = () => {
                                 <Stack.Screen
                                     name="trang kĩ năng"
                                     component={CVSkillPage}
+                                />
+                                <Stack.Screen
+                                    name="trang danh sách bài đăng"
+                                    component={IndexPage}
                                 />
                             </>
                         }

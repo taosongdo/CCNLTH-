@@ -114,7 +114,7 @@ const CVSkillPage = () => {
     }, [])
     return (
         <View style={[Styles.flex1, Styles.bgColorF8FAFC]}>
-            <View style={Styles.p10}>
+            <View style={[Styles.p10, Styles.h240]}>
                 <ScrollList
                     List={skillList}
                     itemPressHandler={itemPressHandler}

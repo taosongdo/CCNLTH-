@@ -10,7 +10,7 @@ export const endpoints = {
     'cvs-create': `/cvs/`,
     'cv-information': '/users/cv-information/',
 
-    'chat-groups':'/users/chat-groups/',
+    'chat-groups': '/users/chat-groups/',
 
     'experiences': '/users/experiences/',
     'experiences-create': '/experiences/',
@@ -27,6 +27,7 @@ export const endpoints = {
     'job-postings': '/users/job-postings/',
     'job-postings-detail': (id) => (`/job-postings/${id}/`),
     'job-postings-create': '/job-postings/',
+    'apply-job-postings': (id) => `/cvs/${id}/job-postings/`,
 
     'applies': (id) => `/job-postings/${id}/applies/`,
     'applies-details': (id) => (`/applies/${id}/`),
