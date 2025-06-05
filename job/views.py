@@ -150,9 +150,6 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
         queryset = JobPosting.objects.filter(active=True)
         query = queryset.exclude(result=None).filter(result__status=ResultStatus.PASSED)
         user = request.user
-
-        
-        
         if request.user.is_authenticated and request.user.role == UserRole.EMPLOYER:
             owner = request.query_params.get("owner")
             if owner:
@@ -203,6 +200,8 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     def get_chat(self, request):
         user = request.user 
         return Response(ApplyChatSerializer(user).data, status=status.HTTP_200_OK)
+    
+ 
     
     
 class EducationLevelViewSet(viewsets.ViewSet,generics.RetrieveAPIView,generics.UpdateAPIView,generics.DestroyAPIView):
@@ -266,7 +265,7 @@ class ExperienceViewSet(viewsets.ViewSet,generics.RetrieveAPIView,generics.Updat
             return Response({"message":"đã đạt tới hạn mức"},status=status.HTTP_400_BAD_REQUEST)
     
     
-class JobPostingViewSet(viewsets.ViewSet):
+class JobPostingViewSet(viewsets.ViewSet, generics.RetrieveAPIView):
     queryset = JobPosting.objects.filter(active=True)
     serializer_class = JobPostingDetailSerializer
 
@@ -277,7 +276,7 @@ class JobPostingViewSet(viewsets.ViewSet):
     
     def retrieve(self, request, *args, **kwargs):
         user = request.user
-        job_posting = self.get_object()
+        job_posting = self.get_object() 
         return Response(JobPostingDetailSerializer(job_posting,context={"applicant_id":user.id,'user_role':user.role}).data,status=status.HTTP_200_OK)
     
     def create(self, request, *args, **kwargs):
@@ -337,7 +336,7 @@ class ResultViewSet(viewsets.ViewSet):
         return Response(ResultSerializer(result).data, status=status.HTTP_201_CREATED)
   
 
-class CVViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView, generics.DestroyAPIView,generics.RetrieveAPIView):
+class CVViewSet(viewsets.ViewSet, generics.UpdateAPIView, generics.DestroyAPIView,generics.RetrieveAPIView):
     queryset = CV.objects.filter(active=True)
     serializer_class = CVDetailSerializer
     pagination_class = Paginator
@@ -361,7 +360,16 @@ class CVViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView
             return Response(CVDetailSerializer(cv).data, status=status.HTTP_201_CREATED)
         else:
             return Response({"message":"đã đạt tối đa số lượng cv"}, status=status.HTTP_400_BAD_REQUEST)
-
+        
+    @action(methods=["get"],detail=True,url_path='job-postings')
+    def get_job_postings(self,request,pk):
+        user = request.user
+        jobPostings = JobPosting.objects.filter(apply__cv=pk)
+        paginator = Paginator()
+        page = paginator.paginate_queryset(jobPostings, request)
+        return paginator.get_paginated_response(JobPostingSerializer(page,many=True,context={'user_role': user.role if hasattr(user, 'role') else None}).data)
+    
+    
 
 class ApplyViewSet(viewsets.ViewSet,generics.RetrieveAPIView):
     queryset = Apply.objects.filter(active=True)
@@ -398,17 +406,16 @@ class ApplyViewSet(viewsets.ViewSet,generics.RetrieveAPIView):
             return Response(status=status.HTTP_200_OK)
         return Response({"message":"không thể xóa vì đã được nhà tuyển dụng đã chấp nhận"}, status=status.HTTP_400_BAD_REQUEST)
     
+    
+    
 class ApplyMoreInfoViewSet(viewsets.ViewSet):
     queryset = ApplyDateAndMessage.objects.filter(active=True)
     serializer_class = ApplyDateAndMessageSerializer
     permission_classes=[IsCVEmployerOwner]
     
     def create(self, request, *args, **kwargs):
-        user = request.user
         apply_data_and_message_serializer = ApplyDateAndMessageSerializer(data=request.data)
         apply_data_and_message_serializer.is_valid(raise_exception=True)
-        
-      
         apply_status = request.data.get("apply_status")
         apply = Apply.objects.filter(active=True, id=request.data.get("apply"))
         apply.update(apply_status=apply_status)
