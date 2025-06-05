@@ -205,7 +205,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
         return Response(ApplyChatSerializer(user).data, status=status.HTTP_200_OK)
     
     
-class EducationLevelViewSet(viewsets.ViewSet,generics.CreateAPIView,generics.RetrieveAPIView,generics.UpdateAPIView,generics.DestroyAPIView):
+class EducationLevelViewSet(viewsets.ViewSet,generics.RetrieveAPIView,generics.UpdateAPIView,generics.DestroyAPIView):
     queryset = EducationLevel.objects.filter(active=True)
     serializer_class = EducationLevelDetailSerializer
     permission_classes = [IsApplicantOwner, IsApplicant]
@@ -226,7 +226,7 @@ class EducationLevelViewSet(viewsets.ViewSet,generics.CreateAPIView,generics.Ret
         else:
             return Response({'message':"đã đạt tới hạn mức (5)"},status=status.HTTP_400_BAD_REQUEST)
     
-class SkillViewSet(viewsets.ViewSet,generics.CreateAPIView,generics.RetrieveAPIView,generics.UpdateAPIView,generics.DestroyAPIView):
+class SkillViewSet(viewsets.ViewSet,generics.RetrieveAPIView,generics.UpdateAPIView,generics.DestroyAPIView):
     queryset = Skill.objects.filter(active=True)
     serializer_class = SkillDetailSerializer
     permission_classes = [IsApplicantOwner, IsApplicant]
@@ -245,7 +245,7 @@ class SkillViewSet(viewsets.ViewSet,generics.CreateAPIView,generics.RetrieveAPIV
         else:
             return Response({'message':'đã đạt tới số lượng tối đa (5)'}, status=status.HTTP_400_BAD_REQUEST)
     
-class ExperienceViewSet(viewsets.ViewSet,generics.CreateAPIView,generics.RetrieveAPIView,generics.UpdateAPIView,generics.DestroyAPIView):
+class ExperienceViewSet(viewsets.ViewSet,generics.RetrieveAPIView,generics.UpdateAPIView,generics.DestroyAPIView):
     queryset = Experience.objects.filter(active=True)
     serializer_class = ExperienceDetailSerializer
     permission_classes = [IsApplicantOwner,IsApplicant]
@@ -266,7 +266,7 @@ class ExperienceViewSet(viewsets.ViewSet,generics.CreateAPIView,generics.Retriev
             return Response({"message":"đã đạt tới hạn mức"},status=status.HTTP_400_BAD_REQUEST)
     
     
-class JobPostingViewSet(viewsets.ViewSet, generics.CreateAPIView,generics.RetrieveAPIView,generics.UpdateAPIView,generics.DestroyAPIView):
+class JobPostingViewSet(viewsets.ViewSet):
     queryset = JobPosting.objects.filter(active=True)
     serializer_class = JobPostingDetailSerializer
 
@@ -320,7 +320,7 @@ class JobPostingViewSet(viewsets.ViewSet, generics.CreateAPIView,generics.Retrie
     
     
 
-class ResultViewSet(viewsets.ViewSet,generics.CreateAPIView):
+class ResultViewSet(viewsets.ViewSet):
     queryset = Result.objects.filter(active=True)
     serializer_class = ResultSerializer()
     permission_classes = [IsAdmin]
@@ -363,7 +363,7 @@ class CVViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView
             return Response({"message":"đã đạt tối đa số lượng cv"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ApplyViewSet(viewsets.ViewSet,generics.RetrieveAPIView,generics.CreateAPIView ,generics.UpdateAPIView,generics.DestroyAPIView):
+class ApplyViewSet(viewsets.ViewSet,generics.RetrieveAPIView):
     queryset = Apply.objects.filter(active=True)
     serializer_class = ApplyDetailSerializer
     def get_permissions(self):
@@ -398,7 +398,7 @@ class ApplyViewSet(viewsets.ViewSet,generics.RetrieveAPIView,generics.CreateAPIV
             return Response(status=status.HTTP_200_OK)
         return Response({"message":"không thể xóa vì đã được nhà tuyển dụng đã chấp nhận"}, status=status.HTTP_400_BAD_REQUEST)
     
-class ApplyMoreInfoViewSet(viewsets.ViewSet,generics.CreateAPIView):
+class ApplyMoreInfoViewSet(viewsets.ViewSet):
     queryset = ApplyDateAndMessage.objects.filter(active=True)
     serializer_class = ApplyDateAndMessageSerializer
     permission_classes=[IsCVEmployerOwner]
