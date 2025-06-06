@@ -381,7 +381,7 @@ class ApplyViewSet(viewsets.ViewSet,generics.RetrieveAPIView):
             return [IsCVEmployerOwner()]
         return [IsCVApplicantOwner()]
     
-    def update(self, request, *args, **kwargs):
+    def partial_update(self, request, *args, **kwargs):
         apply_status = request.data.get("apply_status")
         apply = self.get_object()
         apply.apply_status = apply_status
