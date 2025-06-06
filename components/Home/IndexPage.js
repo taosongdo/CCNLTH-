@@ -94,7 +94,6 @@ const IndexPage = ({ navigation }) => {
     }
     const loadData = async (url, token) => {
         try {
-
             const headers = token ? { Authorization: `Bearer ${token}` } : {}
             const res = await Apis.get(url, {
                 headers
@@ -122,8 +121,9 @@ const IndexPage = ({ navigation }) => {
         setJobList(deleteItem(jobList, 'id', id))
     }
     const loadMoreDataHandler = () => {
+        console.log(nextUrl)
         if (nextUrl) {
-            loadData(nextUrl)
+            loadData(nextUrl, access_token)
         }
     }
     const sortByDateHandler = () => {
