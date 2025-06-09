@@ -453,11 +453,11 @@ class CustomTokenView(TokenView):
         response = super().post(request, *args, **kwargs)
         data = json.loads(response.content) 
         user = authenticate(username=request.POST.get("username"),password=request.POST.get("password"))
+        if user == None:
+            return response
         expo_push_token = ExpoPushToken.objects.get_or_create(value=request.POST.get("expo_token"),user=user)
         if expo_push_token:
             send_push_notification(expo_push_token[0].value,"thông báo","đã đăng nhập")
-        if user == None:
-            return response
         data['role'] = user.role
         data = json.dumps(data)
         response = HttpResponse(content=data, status=201)
