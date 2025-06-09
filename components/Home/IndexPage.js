@@ -156,7 +156,17 @@ const IndexPage = ({ navigation }) => {
                     <Pressable style={[styles.dropDown, Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.flex1]} onPress={() => { openOptionsHandler() }}>
                         <FontAwesome5 name={optionCheck ? "arrow-circle-up" : "arrow-circle-down"} size={30} color="#222831"></FontAwesome5>
                     </Pressable>
-                    <Pressable style={[styles.searchButton, Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.w60, Styles.h60]} onPress={search}>
+                    <Pressable style={[styles.searchButton, Styles.alignItemsCenter, Styles.justifyContentCenter, Styles.w60, Styles.h60]} onPress={() => {
+                        const cvId = params?.cvId
+                        if (cvId) {
+                            search(endpoints['apply-job-postings'](cvId), access_token)
+                        }
+                        else {
+                            const owner = params?.owner
+                            let token = owner ? access_token : null
+                            search(endpoints['job-postings'], token)
+                        }
+                    }}>
                         <FontAwesome6 name="magnifying-glass" size={30} color="#222831"></FontAwesome6>
                     </Pressable>
                 </View>
